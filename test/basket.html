@@ -1,0 +1,259 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+   <head id="Head1">
+      <meta http-equiv="X-UA-Compatible" content="IE=Edge,chrome=1"/>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+      <meta http-equiv="Content-Languge" content="en-GB" />
+      <meta http-equiv="Content-Style-Type" content="text/css" />
+      <meta http-equiv="Content-Script-Type" content="text/javascript" />
+      <title>Online Member Services</title>
+      <link href="/sitecss/gllbetter/global.min.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/BaseCss.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/Jtip.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/LayoutCss.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/jquery.datepick.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/TextCss.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/AdminButtons.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/jquery.multiSelect.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/Thickbox.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/CSCCss.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <link href="/sitecss/gllbetter/MacroCss.css?v=63579221764" rel="stylesheet" type="text/css" />
+      <script src="/sitescripts/jquery.min.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/MicrosoftAjax.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/MicrosoftMvcAjax.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/jquery.collapsor.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/Thickbox.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/Resizer.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/CMSSearch.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/jtip.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/paRSS.js?v=63579221764" type="text/javascript"></script>
+      <script src="/sitescripts/PopLink.js?v=63579221764" type="text/javascript"></script>
+      <link href='/enterprise/CustomStyleSheet.css?v=63579221764' rel='Stylesheet' type='text/css' />
+      <script type='text/javascript' src='/enterprise/CustomScript.js?v=63579221764'></script>
+      <script type="text/javascript" src="../scripts/legendware/testautomation.js"></script>
+   </head>
+   <body>
+      <!-- Google Tag Manager -->
+      <noscript>
+         <iframe src="//www.googletagmanager.com/ns.html?id=GTM-W452ST" height="0" width="0" style="display:none;visibility:hidden"></iframe>
+      </noscript>
+      <script>
+         (function (w, d, s, l, i) {
+             w[l] = w[l] || [];
+             w[l].push({
+                 'gtm.start': new Date().getTime(),
+                 event: 'gtm.js'
+             });
+             var f = d.getElementsByTagName(s)[0],
+                 j = d.createElement(s),
+                 dl = l != 'dataLayer' ? '&l=' + l : '';
+             j.async = true;
+             j.src = '//www.googletagmanager.com/gtm.js?id=' + i + dl;
+             f.parentNode.insertBefore(j, f);
+         })(window, document, 'script', 'dataLayer', 'GTM-W452ST');
+      </script>
+      <!-- End Google Tag Manager -->
+      <script type="text/javascript">
+         var CmsBaseUrl = '/enterprise/account/login';
+      </script>
+      <script src="/Scripts/Default/CMSCommon.js?v=63579221764" type="text/javascript"></script>
+      <form action="#" method="post" id="form1">
+      </form>
+      <div id="container">
+         <div id="header">
+            <div id="headertop">
+               <div id="logo">
+               </div>
+            </div>
+            <div id="menu">
+               <ul>
+                  <li><a href="/enterprise/Account/Logout"><span>Log Out</span></a></li>
+               </ul>
+            </div>
+         </div>
+         <div id="innerContainer">
+            <div id="topCap">
+            </div>
+            <div id="contentWrapper">
+               <div id="left">
+                  <div id="submenu">
+                     <ul>
+                        <!-- START: BOOKINGS /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\ -->
+                        <li>
+                           <h2>Bookings</h2>
+                        </li>
+                        <li ><a href="/enterprise/BookingsCentre/Index" >Make a Booking</a></li>
+                        <li ><a href="/enterprise/BookingsCentre/MyBookings" >View My Bookings</a></li>
+                        <!-- END: BOOKINGS /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\ -->
+                        <!-- START: ONLINE TICKETING /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\ -->
+                        <li>
+                           <h2>Activity Tickets</h2>
+                        </li>
+                        <li>
+                           <a href="/enterprise/onlineticketing/browse">Browse Tickets</a>
+                        </li>
+                        <!-- END: ONLINE TICKETING /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\-->
+                        <!-- START: MEMBERSHIP /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\-->
+                        <li>
+                           <h2>Memberships</h2>
+                        </li>
+                        <li ><a href="/enterprise/Account/MyMemberships" >My Membership</a></li>
+                        <li ><a href="/enterprise/Account/UnlinkMembership" >Unlink My Membership</a></li>
+                        <!-- END: MEMBERSHIP /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\ -->
+                        <!-- START: ACCOUNT /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\ -->
+                        <li>
+                           <h2>Account</h2>
+                        </li>
+                        <li><a href="/enterprise/Account/Logout">Log Out</a></li>
+                        <li ><a href="/enterprise/Account/CSC" >My Home</a></li>
+                        <li  class='selected' ><a href="/enterprise/Basket/Index"  class='selected' >Basket (1)</a></li>
+                        <li ><a href="/enterprise/Account/PersonalProfile" >My Profile</a></li>
+                        <li ><a class="" href="/enterprise/billsandpayments">Bills &amp; Payments</a></li>
+                        <li ><a href="/enterprise/Account/ChangeUsername" >Change My Email</a></li>
+                        <li ><a href="/enterprise/Account/ChangePassword" >Change My Password</a></li>
+                        <!-- END: ACCOUNT /\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\/\\ -->
+                     </ul>
+                  </div>
+               </div>
+               <div>
+                  <div class="formOffset">
+                     <div class="formBand">
+                        <img src="/media/siteimages/iconBasket.gif" alt="Basket" />
+                        My Basket
+                     </div>
+                     <div class="formInput">
+                        <div class="fieldSetWrapper">
+                           <div class="fieldSetTop"></div>
+                           <div class="fieldSetContent">
+                              <fieldset>
+                                 <legend> What's in My Basket? </legend>
+                                 <div>
+                                    <em>We strongly recommend that members check that all confirmed bookings are visible in &lsquo;my bookings&rsquo;.<br />Please contact your home leisure centre should your confirmed booking not appear.</em>
+                                 </div>
+                                 <div>
+                                    <div id="basketStageIndicator" style="background-position:50% -98px;"></div>
+                                 </div>
+                                 <div>
+                                    <div class='basketItem'>
+                                       <table>
+                                          <tr>
+                                             <td class='col1'>Booking: Squash 40 Minutes (Oasis)<br />Location: Squash Court 40 mins 1</td>
+                                             <td class='alignRight'>\194\163\&9.60<br /><a onclick="$(this).html('Processing...');" href='/enterprise/Basket/AllocateBookingCredit?bookingid=12495531'>Use Voucher</a><br /><br /></td>
+                                          </tr>
+                                          <tr>
+                                             <td>13 October 2015 16:00 - 16:40</td>
+                                             <td class='alignRight'><a onclick="$(this).html('Processing...');" href='/enterprise/Basket/RemoveBooking?bookingId=13093372'>Remove Item</a></td>
+                                          </tr>
+                                       </table>
+                                    </div>
+                                 </div>
+                                 <div class="formSubmit" id="totalAmount">
+                                    <table class="table100">
+                                       <tr>
+                                          <td style="text-align:left;">
+                                             Total Outstanding:
+                                          </td>
+                                          <td style="text-align:right;"><strong>\194\163\&9.60</strong></td>
+                                       </tr>
+                                    </table>
+                                 </div>
+                                 <div>
+                                    <div class="formSubmit">
+                                       <div class='basketButtonWrapper '>
+                                          <a id="btnPayNow" onclick="updatePayButton();"
+                                             href="/enterprise/Basket/Pay"
+                                             class="MembersButton"
+                                             target="_top">Pay by Card</a>
+                                          <h4>Pay by Card</h4>
+                                          <p>There is a charge for your basket, click <b class='TextMembers'>'Pay by Card'</b> to proceed.</p>
+                                          <hr />
+                                       </div>
+                                       <div class="basketButtonWrapper " style="height:100px;">
+                                          <div style="width:30%;float:right;text-align:right;overflow:hidden;">
+                                             <!-- TODO: set correct link -->
+                                             <a id="btnCommercePayNow" onclick="updatePayCardCommerceButton();"
+                                                href="/enterprise/cardcommerce/Pay"
+                                                class="MembersButton"
+                                                style="text-transform: none;float:none;"
+                                                target="_top">theMET Card</a>
+                                          </div>
+                                          <div style="width:60%;">
+                                             <h4>Pay by theMET Card</h4>
+                                             <p>There is a charge for your basket, click <b class='TextMembers'>'theMET Card'</b> to proceed.</p>
+                                          </div>
+                                          <hr style="margin-top:40px;width:100%;" />
+                                       </div>
+                                       <script type="text/javascript">
+                                          function updatePayButton() {
+                                              // hide the old button and replace it with a dummy button to avoid double clicking
+                                              $("#btnPayNow").hide();
+                                              $("#btnPayNow").after("<a href='#' onclick='return false;' class='MembersButton'>Processing...</a>");
+                                          }
+                                       </script>
+                                    </div>
+                                 </div>
+                              </fieldset>
+                           </div>
+                           <div class="fieldSetBottom"></div>
+                        </div>
+                     </div>
+                     <div class="formFooterBand"></div>
+                  </div>
+               </div>
+            </div>
+            <div id="footer">
+               <table>
+                  <tbody>
+                     <tr valign="top">
+                        <td><img alt="ABOUT" src="/Media/Siteimages/titLeAbout.jpg" /></td>
+                        <td><img alt="CONTACT" src="/Media/Siteimages/titLeContact.jpg" /></td>
+                        <td><img alt="AWARDS AND ACCREDITATION" src="/Media/Siteimages/titLeAwards.jpg" /></td>
+                     </tr>
+                     <tr>
+                        <td colspan="3">&nbsp;</td>
+                     </tr>
+                     <tr valign="top">
+                        <td>
+                           <a class="thickbox" href="/Enterprise/account/Terms?keepThis=true&amp;TB_iframe=true&amp;height=400&amp;width=600&amp;modal=true">Terms &amp; Conditions</a><br />All material copyright GLL 2014<br /><!--Powered by <a href="http://www.legendware.co.uk" target="_blank">Legend Online Services</a>-->
+                        </td>
+                        <td>GLL,<br />Middlegate House,<br />The Royal Arsenal, London SE18 6SX<br />Tel: 020 8317 5000 Fax: 020 8317 5021 I.P.S.<br />Registration No: 27793R Inland Revenue<br />Charity No: XR43398, VAT No: 219749179</td>
+                        <td><img alt="Accreditation" src="/Media/Siteimages/Accreditation.jpg" /><a href="http://www.socialenterprise.org.uk/" target="_blank"><img alt="Accreditation" src="/Media/Siteimages/Accreditation2.jpg" /></a></td>
+                     </tr>
+                  </tbody>
+               </table>
+               <!--<table>
+                  <tr valign="top">
+                      <td><img src="/Media/Siteimages/titLeAbout.jpg" alt="ABOUT" /></td>
+                      <td><img src="/Media/Siteimages/titLeContact.jpg" alt="CONTACT" /></td>
+                      <td><img src="/Media/Siteimages/titLeAwards.jpg" alt="AWARDS AND ACCREDITATION" /></td>
+                  </tr>
+                  <tr>
+                      <td colspan="3">&nbsp;</td>
+                  </tr>
+                  <tr valign="top">
+                      <td>
+                          <a href="/Enterprise/account/Terms?keepThis=true&TB_iframe=true&height=400&width=600&modal=true" class="thickbox">Terms and Conditions</a><br />
+                          All material copyright GLL 2012<br />
+                          <a href="mailto:customerservices@gll.org">Support email: customerservices@gll.org</a><br />
+                          Powered by <a href="http://www.legendware.co.uk" target="_blank">Legend Online Services</a>
+                      </td>
+                      <td>
+                          GLL,<br />
+                          Middlegate House,<br />
+                          The Royal Arsenal, London SE18 6SX<br />
+                          Tel: 020 8317 5000 Fax: 020 8317 5021 I.P.S.<br />
+                          Registration No: 27793R Inland Revenue<br />
+                          Charity No: XR43398<br />
+                      </td>
+                      <td>
+                          <img src="/Media/Siteimages/Accreditation.jpg" alt="Accreditation" />
+                      </td>
+                  </tr>
+                  </table>-->
+            </div>
+         </div>
+      </div>
+      <form>
+      </form>
+   </body>
+</html>
