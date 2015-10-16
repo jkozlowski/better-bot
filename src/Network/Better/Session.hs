@@ -34,7 +34,6 @@ import           Network.Better.Types    ( Booking(..)
                                          , BasketItem(..)
                                          , emptyBasketItem
                                          , basketItemId
-                                         , basketItemScript
                                          , basketItemAllocateBookingCreditUrl )
 import           Network.Wreq
 import           System.IO               ( stdout, stdin, hGetEcho, hFlush
@@ -47,6 +46,8 @@ import qualified Data.ByteString.Lazy       as B
 import qualified Data.ByteString.Lazy.Char8 as B8
 import qualified Data.ByteString            as BS
 import qualified Data.Text                  as T
+import qualified Data.Text.Lazy             as TL
+import qualified Data.Text.Lazy.Encoding    as TL
 import qualified Network.Wreq.Session       as S
 
 
@@ -168,22 +169,23 @@ bookSlot s (TimetableEntryId timetableEntryId)
 getBasket :: MonadIO m => S.Session -> m (Maybe [BasketItem])
 getBasket s = do
   r <- liftIO $ S.getWith defaults s ("https://gll.legendonlineservices.co.uk/enterprise/basket")
-  liftIO . print $ r ^. responseBody
   return $! scrapeStringLike (r ^. responseBody) basketScraper
 
 basketScraper :: Scraper B.ByteString [BasketItem]
-basketScraper = chroots (("div" :: String) @: [hasClass "basketItem"]) basketItem
+basketScraper = chroots divBasketItem basketItem
   where basketItem :: Scraper B.ByteString BasketItem
         basketItem = do
-          scriptText <- text $ ("script" :: String) @: [("type" :: String) @= "text/javascript"]
-          let allocateBooking = extract . match (toRegex reg) $ (B8.unpack scriptText)
+          allocateBooking <- attr "href" aHref
           return $! emptyBasketItem & basketItemId     .~ BasketItemId 1
-                                    & basketItemAllocateBookingCreditUrl .~ allocateBooking
+                                    & basketItemAllocateBookingCreditUrl .~ (TL.toStrict . TL.decodeUtf8 $ allocateBooking)
+
         toRegex = makeRegexOpts defaultCompOpt { multiline = False } defaultExecOpt
-        reg :: String
-        reg = ".*(\\/enterprise\\/basket\\/allocatebookingcredit\\?bookingid=[0-9]+).*"
-        extract :: [[String]] ->  Maybe String
-        extract groups = groups ^? ix 0 . ix 1
+
+        divBasketItem :: Selector
+        divBasketItem = (("div" :: String) @: [hasClass "basketItem"])
+
+        aHref :: Selector
+        aHref = ("a" :: String) @: [("href" :: String) @=~ (toRegex ("/enterprise/Basket/AllocateBookingCredit.*" :: String))]
 
 -- |
 -- Helper functions

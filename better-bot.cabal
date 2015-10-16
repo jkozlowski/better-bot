@@ -57,6 +57,8 @@ test-suite better-bot-test
   main-is:             Spec.hs
   build-depends:       base
                      , better-bot
+                     , bytestring
+                     , scalpel
                      , aeson
                      , lens
                      , text

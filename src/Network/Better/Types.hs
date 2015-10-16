@@ -38,7 +38,7 @@ module Network.Better.Types (
  , timetableEntryDate, timetableEntryStartTime, timetableEntryEndTime
 
  , BasketItemId(..), BasketItem, _BasketItem, emptyBasketItem
- , basketItemId, basketItemScript, basketItemAllocateBookingCreditUrl
+ , basketItemId, basketItemAllocateBookingCreditUrl
  ) where
 
 import Control.Lens         ( makeClassy, makePrisms )
@@ -230,8 +230,7 @@ newtype BasketItemId = BasketItemId Int
 -- | Item in a basket.
 data BasketItem = BasketItem
   { _basketItemId                       :: BasketItemId
-  , _basketItemScript                   :: Text
-  , _basketItemAllocateBookingCreditUrl :: Maybe String
+  , _basketItemAllocateBookingCreditUrl :: Text
   } deriving (Show, Eq)
 
 $(makeClassy ''BasketItem)
@@ -240,6 +239,5 @@ $(makePrisms ''BasketItem)
 
 emptyBasketItem = BasketItem
   { _basketItemId       = BasketItemId 0
-  , _basketItemScript   = ""
-  , _basketItemAllocateBookingCreditUrl = Nothing
+  , _basketItemAllocateBookingCreditUrl = ""
   }

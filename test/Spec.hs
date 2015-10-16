@@ -3,21 +3,23 @@
 import Control.Lens
 import Data.Aeson
 import Data.Monoid ( mconcat, (<>) )
-import Data.Text.IO          as T
 import Test.Tasty
-import Test.Tasty.QuickCheck as QC
 import Test.Tasty.HUnit
 import Network.Better.Types
+import Network.Better.Session as Session
+import Data.ByteString.Lazy   as B
+import Text.HTML.Scalpel      as S
+import Data.Text.IO           as T
+import Test.Tasty.QuickCheck  as QC
 
 main :: IO ()
 main = defaultMain tests
 
-
--- html <- T.readFile "test/basket.html"
--- T.putStrLn html
-
 tests :: TestTree
-tests = testGroup "Tests" [unitTests]
+tests = testGroup "Tests" [
+    unitTests
+  , testCase "BasketScraper can scrape html" basketScraperTest
+  ]
 
 unitTests = testGroup "Unit tests" $ mconcat
   [ jsonTests "Booking"        bookingJSON            bookingValue
@@ -27,6 +29,15 @@ unitTests = testGroup "Unit tests" $ mconcat
   , jsonTests "Activity"       activityJSON           activityValue
   , jsonTests "TimetableEntry" timetableEntryJSON     timetableEntryValue
   ]
+
+basketScraperTest :: Assertion
+basketScraperTest = do
+  html <- B.readFile "test/basket.html"
+  let actual = scrapeStringLike html basketScraper
+  let expected = Just [ emptyBasketItem & basketItemId     .~ BasketItemId 1
+                                        & basketItemAllocateBookingCreditUrl .~ "/enterprise/Basket/AllocateBookingCredit?bookingid=12495531"
+                      ]
+  expected @=? actual
 
 jsonTests typeName json value =
   [ testCase (typeName <> " ToJSON") $
@@ -161,5 +172,3 @@ timetableEntryValue
                         & timetableEntryDate           .~ "Sun, 04 Oct"
                         & timetableEntryStartTime      .~ "16:00"
                         & timetableEntryEndTime        .~ "16:40"
-
--- {"Name":"Squash","Id":6963,"Instructor":null,"Location":"Oasis","Price":12.95,"Discount":-3.35,"Total":9.60,"Date":"Wed, 07 Oct","StartTime":"11:20","EndTime":"12:00","RemainingSlots":3,"FacilityId":197,"Facility":"Oasis","ErrorMessage":null,"NoBookReason":"available","ActivityId":444,"FullDate":"2015-10-07","Description":null,"CanBook":true}

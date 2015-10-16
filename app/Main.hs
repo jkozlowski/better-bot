@@ -29,7 +29,7 @@ main :: IO ()
 main = do
   s <- createSession
   runStdoutLoggingT (bookActivity s "Oasis" "Other Activities" "Squash"
-                                    "Tue, 13 Oct" "15:20")
+                                    "Mon, 19 Oct" "12:40")
   return ()
 
 type MonadIOLog m = (MonadIO m, MonadLogger m)
@@ -49,8 +49,6 @@ bookActivity s
              date'
              startTime'
  = do basketItems <- getBasket s
-
-      $(logInfo) $ "Basket: " <> (T.pack . show $ basketItems)
 
       -- Make sure the basket is empty
       checkBasketCount s 0
