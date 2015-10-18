@@ -46,7 +46,9 @@ import           Types                       (BookingConfig, Config, DayOfWeek,
                                               _Password, _Slots)
 
 main :: IO ()
-main = execParser optsParserInfo >>= \opts -> do
+main = -- execParser optsParserInfo >>= \opts -> do
+       do
+  let opts = Opts Nothing
   maybeConfig <- readConfig
   case maybeConfig of
     Left e  -> exitWithError e
