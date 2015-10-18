@@ -1,10 +1,8 @@
-
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
-{-# OPTIONS_GHC -fwarn-missing-methods #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Network.Better.Types

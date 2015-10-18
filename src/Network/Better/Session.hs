@@ -69,9 +69,9 @@ apiBaseURL = baseURL <> "/enterprise"
 mobileAPIBaseURL :: String
 mobileAPIBaseURL = "https://gll.legendonlineservices.co.uk/enterprise/mobile"
 
-createSession :: MonadIO m => m S.Session
-createSession = liftIO $ S.withSession $ \sess -> do
-  login sess "mail@jakub-kozlowski.com"
+createSession :: MonadIO m => String -> m S.Session
+createSession email = liftIO $ S.withSession $ \sess -> do
+  login sess email
   return sess
 
 login :: MonadIO m => S.Session -> String -> m ()

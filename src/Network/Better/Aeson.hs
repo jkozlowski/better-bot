@@ -1,6 +1,7 @@
 module Network.Better.Aeson (
    jsonOptions
  , decapitalizeJsonOptions
+ , decapitalizeJsonOptionsRemovePrefix
  , jsonOptionsRemovePrefix
  ) where
 
@@ -9,16 +10,19 @@ import Data.Char     ( isUpper, toUpper, toLower )
 
 jsonOptions = defaultOptions { fieldLabelModifier = removePrefix }
 
-jsonOptionsRemovePrefix prefix = defaultOptions { fieldLabelModifier = (removePrefixMatch prefix) }
+jsonOptionsRemovePrefix prefix = defaultOptions { fieldLabelModifier = removePrefixMatch prefix }
 
 decapitalizeJsonOptions
   = defaultOptions { fieldLabelModifier = decapitalize . removePrefix }
+
+decapitalizeJsonOptionsRemovePrefix prefix
+  = defaultOptions { fieldLabelModifier = decapitalize . removePrefixMatch prefix }
 
 removePrefix :: String -> String
 removePrefix = dropWhile (not . isUpper)
 
 removePrefixMatch :: String -> String -> String
-removePrefixMatch prefix s = drop (length prefix) s
+removePrefixMatch prefix = drop (length prefix)
 
 decapitalize :: String -> String
-decapitalize (s:ss) = (toLower s) : ss
+decapitalize (s:ss) = toLower s : ss
