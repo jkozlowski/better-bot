@@ -1,4 +1,6 @@
-{-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Types
@@ -12,9 +14,10 @@
 module Types where
 
 import           Control.Lens.TH      (makeClassy, makePrisms)
+import           Data.Aeson
 import qualified Data.Aeson.TH        as A
 import qualified Data.Map.Strict      as M
-import           Data.Text            (Text)
+import           Data.Text            (Text, pack)
 import qualified Data.Yaml            as Yaml
 import           Network.Better.Aeson (decapitalizeJsonOptionsRemovePrefix)
 
@@ -26,20 +29,27 @@ data DayOfWeek
   | Fri
   | Sat
   | Sun
-  deriving (Eq, Show)
+  deriving (Eq, Show, Read, Enum, Ord)
 
 $(makeClassy ''DayOfWeek)
 $(makePrisms ''DayOfWeek)
 $(A.deriveJSON A.defaultOptions ''DayOfWeek)
 
-data Slot = Slot
-  { _slotDay  ::                !DayOfWeek
-  , _slotTime :: {-# UNPACK #-} !Text
-  } deriving (Eq, Show)
+newtype Slots = Slots (M.Map DayOfWeek Text)
+  deriving (Eq, Show)
 
-$(makeClassy ''Slot)
-$(makePrisms ''Slot)
-$(A.deriveJSON (decapitalizeJsonOptionsRemovePrefix "_slot") ''Slot)
+$(makeClassy ''Slots)
+$(makePrisms ''Slots)
+
+instance Yaml.ToJSON Slots where
+   toJSON (Slots m) = object   .
+                      M.assocs .
+                      M.mapKeys (pack . show) .
+                      M.map String $ m
+
+instance Yaml.FromJSON Slots where
+  parseJSON v@(Object _) = Slots . M.mapKeys read <$> parseJSON v
+  parseJSON _ = mempty
 
 data Booking = Booking
   { _bookingFacility     :: {-# UNPACK #-} !Text
@@ -47,7 +57,7 @@ data Booking = Booking
   , _bookingActivity     :: {-# UNPACK #-} !Text
   , _bookingEmail        :: {-# UNPACK #-} !Text
   , _bookingPassword     :: {-# UNPACK #-} !Text
-  , _bookingSlots        ::                ![Slot]
+  , _bookingSlots        ::                !Slots
   } deriving (Eq, Show)
 
 $(makeClassy ''Booking)
