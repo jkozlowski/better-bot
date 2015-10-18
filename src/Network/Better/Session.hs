@@ -30,13 +30,14 @@ import           Data.Monoid                ((<>))
 import qualified Data.Text                  as T
 import qualified Data.Text.Lazy             as TL
 import qualified Data.Text.Lazy.Encoding    as TL
+import qualified Data.Time                  as Time
+import qualified Data.Time.Format           as Time
 import           Data.Typeable
-import qualified Debug.Trace                as Debug
 import           Network.Better.Types       (Activity (..), ActivityId (..),
                                              ActivityType (..),
                                              ActivityTypeId (..),
                                              BasketCount (..), BasketItem (..),
-                                             BasketItemId (..), Booking (..),
+                                             Booking (..),
                                              BookingCreditStatus (..),
                                              Facility (..), FacilityId (..),
                                              ScrapingException (..),
@@ -44,7 +45,7 @@ import           Network.Better.Types       (Activity (..), ActivityId (..),
                                              TimetableEntryId (..),
                                              activityName, activityTypeName,
                                              basketItemCreditStatus,
-                                             basketItemId, basketItemRemoveUrl,
+                                             basketItemRemoveUrl,
                                              bookingCreditStatusAllocateUrl,
                                              bookingCreditStatusUnallocateUrl,
                                              emptyBasketItem, facilityName,
@@ -69,21 +70,27 @@ apiBaseURL = baseURL <> "/enterprise"
 mobileAPIBaseURL :: String
 mobileAPIBaseURL = "https://gll.legendonlineservices.co.uk/enterprise/mobile"
 
-createSession :: MonadIO m => String -> m S.Session
-createSession email = liftIO $ S.withSession $ \sess -> do
-  login sess email
+createSession :: MonadIO m => T.Text -> T.Text -> m S.Session
+createSession email pass = liftIO $ S.withSession $ \sess -> do
+  login sess email pass
   return sess
 
-login :: MonadIO m => S.Session -> String -> m ()
-login s email = do
-  password <- getPassword
-  void . liftIO $ S.post s loginUrl (formParams password)
- where loginUrl = apiBaseURL <> "/account/login"
-       formParams password =
+createSessionInteractive :: MonadIO m => String -> m S.Session
+createSessionInteractive email = liftIO $ S.withSession $ \sess -> do
+  loginInteractive sess (T.pack email)
+  return sess
+
+loginInteractive :: MonadIO m => S.Session -> T.Text -> m ()
+loginInteractive s email = getPassword >>= login s email
+
+login :: MonadIO m => S.Session -> T.Text -> T.Text -> m ()
+login s email pass = void . liftIO $ S.post s loginUrl (formParams pass)
+  where loginUrl = apiBaseURL <> "/account/login"
+        formParams password =
                     [ "login.IgnoreCookies"  := ("True"  :: B.ByteString)
                     , "login.HashedPassword" := ("False" :: B.ByteString)
                     , "login.Email"          := email
-                    , "login.Password"       := password
+                    , "login.Password"       := pass
                     , "login.Remember"       := ("false" :: B.ByteString)
                     ]
 
@@ -154,14 +161,17 @@ getTimetableEntry :: MonadIO m
                   -> FacilityId
                   -> ActivityTypeId
                   -> ActivityId
-                  -> T.Text
+                  -> Time.Day
                   -> T.Text
                   -> m (Maybe TimetableEntry)
 getTimetableEntry s
                   facility' activityType' activity'
                   date' startTime' = do
   timetableEntries <- getTimetable s facility' activityType' activity'
-  return $! find (\e -> e ^. timetableEntryDate      == date'    &&
+  -- e.g. Mon, 19 Oct
+  let dateFormat = "%a, %e %b"
+      formattedDate = T.pack $ Time.formatTime Time.defaultTimeLocale dateFormat date'
+  return $! find (\e -> e ^. timetableEntryDate      == formattedDate &&
                         e ^. timetableEntryStartTime == startTime')
                  timetableEntries
 
@@ -187,8 +197,7 @@ basketScraper = chroots divBasketItem basketItem
         basketItem = do
           creditStatus  <- unallocatedItem <|> allocatedItem
           removeBooking <- attr href removeBookingUrl
-          return $! emptyBasketItem & basketItemId     .~ BasketItemId 1
-                                    & basketItemCreditStatus .~ creditStatus
+          return $! emptyBasketItem & basketItemCreditStatus .~ creditStatus
                                     & basketItemRemoveUrl .~ decodeUtf8 removeBooking
 
         href = "href"
@@ -246,13 +255,13 @@ getAsJSONWith options s apiCall = liftIO $ do
 paramVal :: Show a => a -> [T.Text]
 paramVal val = [T.pack . show $ val]
 
-getPassword :: MonadIO m => m String
+getPassword :: MonadIO m => m T.Text
 getPassword = liftIO $ do
   putStr "Password: "
   hFlush stdout
   pass <- withEcho False getLine
   putChar '\n'
-  return pass
+  return $! T.pack pass
 
 withEcho :: Bool -> IO a -> IO a
 withEcho echo action = do

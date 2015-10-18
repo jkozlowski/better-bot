@@ -34,8 +34,7 @@ unitTests = testGroup "Unit tests" $ mconcat
 allocatedBasketTest :: Assertion
 allocatedBasketTest =
   let creditStatus = _Allocated # "/enterprise/Basket/UnAllocateBookingCredit?bookingid=enterprise"
-      expected = emptyBasketItem & basketItemId     .~ BasketItemId 1
-                                 & basketItemCreditStatus .~ creditStatus
+      expected = emptyBasketItem & basketItemCreditStatus .~ creditStatus
                                  & basketItemRemoveUrl .~ "/enterprise/Basket/RemoveBooking?bookingId=13189149"
       file = "test/allocated-basket.html"
   in basketScraperTest file expected
@@ -43,8 +42,7 @@ allocatedBasketTest =
 unallocatedBasketTest :: Assertion
 unallocatedBasketTest =
   let creditStatus = _Unallocated # "/enterprise/Basket/AllocateBookingCredit?bookingid=12495531"
-      expected = emptyBasketItem & basketItemId           .~ BasketItemId 1
-                                 & basketItemCreditStatus .~ creditStatus
+      expected = emptyBasketItem & basketItemCreditStatus .~ creditStatus
                                  & basketItemRemoveUrl    .~ "/enterprise/Basket/RemoveBooking?bookingId=13093372"
       file = "test/unallocated-basket.html"
   in basketScraperTest file expected

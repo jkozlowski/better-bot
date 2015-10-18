@@ -25,28 +25,35 @@ import           Data.List.Lens
 import           Data.Monoid            ((<>))
 import           Data.Text              (Text)
 import qualified Data.Text              as T
+import           Data.Time              (Day)
 import           Network.Better.Session
 import           Network.Better.Types
 import qualified Network.Wreq.Session   as S
 import           System.Exit            (exitFailure)
+import           Types
 
 type MonadIOLog m = (MonadIO m, MonadLogger m)
 
 bookActivity :: (MonadThrow m, MonadIOLog m)
              => S.Session
-             -> Text
-             -> Text
-             -> Text
-             -> Text
+             -> Config
+             -> Day
              -> Text
              -> m ()
-bookActivity s
-             facilityName'
-             activityTypeName'
-             activityName'
-             date'
-             startTime'
+bookActivity s c date' startTime'
  = do
+      let facilityName'     = c ^. configFacility
+          activityTypeName' = c ^. configActivityType
+          activityName'     = c ^. configActivity
+          email             = c ^. configEmail
+          bookingMsg = activityName'                                 <>
+                       " on "     <> (T.pack . show $ date')         <>
+                       " at "     <> startTime'                      <>
+                       " for "    <> email                           <>
+                       " in "     <> facilityName'
+
+      $(logInfo) $ "Booking " <> bookingMsg
+
       -- Make sure the basket is empty
       clearBasket s
       checkBasketCount s 0
@@ -82,6 +89,8 @@ bookActivity s
         Nothing         -> exitWithError $ "Basket empty" <> show basketItems
 
       checkBasketCount s 0
+
+      $(logInfo) $ "Sucessfully booked " <> bookingMsg
 
 getFacilityOrExit :: MonadIOLog m => S.Session -> Text -> m Facility
 getFacilityOrExit s toFind =
@@ -138,7 +147,7 @@ getTimetableEntryOrExit :: MonadIOLog m
                         -> Facility
                         -> ActivityType
                         -> Activity
-                        -> Text
+                        -> Day
                         -> Text
                         -> m TimetableEntry
 getTimetableEntryOrExit s
@@ -154,13 +163,13 @@ getTimetableEntryOrExit s
                       startTime' >>=
     \case
       Nothing -> exitWithError $ "Failed to find timetableEntry: " <>
-                                  date'                            <>
+                                  T.pack (show date')              <>
                                   " "                              <>
                                   startTime'
       Just  e -> logAndReturn e
   where logAndReturn e = do
           $(logInfo) $ "Found timetableEntry: date=" <>
-                       date'                         <>
+                       T.pack (show date')           <>
                        ", startTime="                <>
                        startTime'                    <>
                        ", id="                       <>

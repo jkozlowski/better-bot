@@ -54,6 +54,9 @@ executable better-bot-exe
                      , aeson
                      , monad-logger
                      , time
+                     , retry
+                     , pretty-show
+                     , optparse-applicative
   default-language:    Haskell2010
 
 test-suite better-bot-test

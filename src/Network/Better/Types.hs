@@ -41,8 +41,8 @@ module Network.Better.Types (
  , _Allocated, bookingCreditStatusAllocateUrl
  , _Unallocated, bookingCreditStatusUnallocateUrl
 
- , BasketItemId(..), BasketItem, _BasketItem, emptyBasketItem
- , basketItemId, basketItemCreditStatus, basketItemRemoveUrl
+ , BasketItem, _BasketItem, emptyBasketItem
+ , basketItemCreditStatus, basketItemRemoveUrl
 
  , ScrapingException(..), _ScrapingException
  ) where
@@ -236,10 +236,6 @@ emptyTimetableEntry = TimetableEntry
   , _timetableEntryEndTime        = ""
   }
 
--- | Id of BasketItem.
-newtype BasketItemId = BasketItemId Int
-  deriving (Show, Eq, FromJSON, ToJSON)
-
 -- | Status of BasketItem credit allocation
 data BookingCreditStatus =
     Allocated
@@ -255,8 +251,7 @@ $(makePrisms ''BookingCreditStatus)
 
 -- | Item in a basket.
 data BasketItem = BasketItem
-  { _basketItemId           :: {-# UNPACK #-} !BasketItemId
-  , _basketItemCreditStatus ::                !BookingCreditStatus
+  { _basketItemCreditStatus ::                !BookingCreditStatus
   , _basketItemRemoveUrl    :: {-# UNPACK #-} !Text
   } deriving (Show, Eq)
 
@@ -265,8 +260,7 @@ $(deriveJSON (jsonOptionsRemovePrefix "_basketItem") ''BasketItem)
 $(makePrisms ''BasketItem)
 
 emptyBasketItem = BasketItem
-  { _basketItemId           = BasketItemId 0
-  , _basketItemCreditStatus = Unallocated ""
+  { _basketItemCreditStatus = Unallocated ""
   , _basketItemRemoveUrl    = ""
   }
 
