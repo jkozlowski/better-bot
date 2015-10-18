@@ -19,6 +19,7 @@ library
   other-modules:       Network.Better.Aeson
   build-depends:       base >= 4.7 && < 5
                      , transformers
+                     , exceptions
                      , wreq
                      , scalpel
                      , lens
@@ -42,6 +43,7 @@ executable better-bot-exe
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   build-depends:       base
                      , transformers
+                     , exceptions
                      , better-bot
                      , text
                      , lens

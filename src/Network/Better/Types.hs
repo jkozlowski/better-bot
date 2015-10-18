@@ -1,8 +1,10 @@
 
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE NoMonomorphismRestriction  #-}
 {-# LANGUAGE OverloadedStrings          #-}
 {-# LANGUAGE RecordWildCards            #-}
 {-# LANGUAGE TemplateHaskell            #-}
+{-# OPTIONS_GHC -fwarn-missing-methods #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Network.Better.Types
@@ -37,37 +39,50 @@ module Network.Better.Types (
  , timetableEntryParentId, timetableEntryId, timetableEntryRemainingSlots
  , timetableEntryDate, timetableEntryStartTime, timetableEntryEndTime
 
+ , BookingCreditStatus(..)
+ , _Allocated, bookingCreditStatusAllocateUrl
+ , _Unallocated, bookingCreditStatusUnallocateUrl
+
  , BasketItemId(..), BasketItem, _BasketItem, emptyBasketItem
- , basketItemId, basketItemAllocateBookingCreditUrl
+ , basketItemId, basketItemCreditStatus, basketItemRemoveUrl
+
+ , ScrapingException(..), _ScrapingException
  ) where
 
-import Control.Lens         ( makeClassy, makePrisms )
-import Data.Aeson           ( FromJSON(..), ToJSON(..), (.:)
-                            , Value(Object), object, pairs, (.=))
-import Data.Aeson.TH        ( deriveJSON, defaultOptions, fieldLabelModifier )
-import Data.Monoid          ( (<>) )
-import Data.Text            ( Text )
-import Network.Better.Aeson ( jsonOptions, decapitalizeJsonOptions
-                            , jsonOptionsRemovePrefix )
+import           Control.Exception      (Exception, SomeException)
+import           Control.Exception.Lens
+import           Control.Lens           (Prism', makeClassy, makePrisms)
+import           Data.Aeson             (FromJSON (..), ToJSON (..),
+                                         Value (Object), object, pairs, (.:),
+                                         (.=))
+import           Data.Aeson.TH          (defaultOptions, deriveJSON,
+                                         fieldLabelModifier)
+import qualified Data.ByteString.Lazy   as B
+import           Data.Monoid            ((<>))
+import           Data.Text              (Text)
+import           Data.Typeable
+import           Network.Better.Aeson   (decapitalizeJsonOptions, jsonOptions,
+                                         jsonOptionsRemovePrefix)
+import           Network.HTTP.Client    (Response)
 
 -- | User's booking.
 data Booking = Booking
-  { _bookingParentId          :: Int
-  , _bookingParentTitle       :: Maybe Text
-  , _bookingName              :: Text
-  , _bookingId                :: Int
-  , _bookingRemainingSlots    :: Int
-  , _bookingInstructor        :: Text
-  , _bookingLocation          :: Text
-  , _bookingFacility          :: Text
-  , _bookingFacilityId        :: Int
-  , _bookingDate              :: Text -- Change to Day
-  , _bookingStartTime         :: Text -- Change to Time
-  , _bookingEndTime           :: Text -- Change to Time
-  , _bookingCanCancel         :: Bool
-  , _bookingStatus            :: Text -- Change to some enum maybe
+  { _bookingParentId       :: {-# UNPACK #-} !Int
+  , _bookingParentTitle    ::                !(Maybe Text)
+  , _bookingName           :: {-# UNPACK #-} !Text
+  , _bookingId             :: {-# UNPACK #-} !Int
+  , _bookingRemainingSlots :: {-# UNPACK #-} !Int
+  , _bookingInstructor     :: {-# UNPACK #-} !Text
+  , _bookingLocation       :: {-# UNPACK #-} !Text
+  , _bookingFacility       :: {-# UNPACK #-} !Text
+  , _bookingFacilityId     :: {-# UNPACK #-} !Int
+  , _bookingDate           :: {-# UNPACK #-} !Text -- Change to Day
+  , _bookingStartTime      :: {-# UNPACK #-} !Text -- Change to Time
+  , _bookingEndTime        :: {-# UNPACK #-} !Text -- Change to Time
+  , _bookingCanCancel      ::                !Bool
+  , _bookingStatus         :: {-# UNPACK #-} !Text -- Change to some enum maybe
   -- , _bookingExcerciseCategory :: Maybe Text -- Don't actually know what that is
-  , _bookingCanSelectCourt    :: Bool
+  , _bookingCanSelectCourt :: Bool
   -- , _bookingDescription       :: Maybe Text
   -- , _bookingItems             :: [] -- Not sure what this is
   } deriving (Show, Eq)
@@ -100,16 +115,16 @@ newtype FacilityId = FacilityId Int
 
 -- | Facility details.
 data Facility = Facility
-  { _facilityName       :: Text
-  , _facilityId         :: FacilityId
-  , _facilityIsHomeClub :: Bool
-  , _facilityAddress1   :: Maybe Text
-  , _facilityAddress2   :: Maybe Text
-  , _facilityAddress3   :: Maybe Text
-  , _facilityCity       :: Maybe Text
-  , _facilityPostCode   :: Maybe Text
-  , _facilityPhone      :: Maybe Text
-  , _facilityLocationId :: Int
+  { _facilityName       :: {-# UNPACK #-} !Text
+  , _facilityId         :: {-# UNPACK #-} !FacilityId
+  , _facilityIsHomeClub ::                !Bool
+  , _facilityAddress1   ::                !(Maybe Text)
+  , _facilityAddress2   ::                !(Maybe Text)
+  , _facilityAddress3   ::                !(Maybe Text)
+  , _facilityCity       ::                !(Maybe Text)
+  , _facilityPostCode   ::                !(Maybe Text)
+  , _facilityPhone      ::                !(Maybe Text)
+  , _facilityLocationId :: {-# UNPACK #-} !Int
   } deriving (Show, Eq)
 
 $(makeClassy ''Facility)
@@ -131,7 +146,7 @@ emptyFacility = Facility
 
 -- | Count of items in the basket.
 data BasketCount = BasketCount
-  { _basketBasketCount  :: Int
+  { _basketBasketCount :: {-# UNPACK #-} !Int
   } deriving (Show, Eq)
 
 $(makeClassy ''BasketCount)
@@ -148,9 +163,9 @@ newtype ActivityTypeId = ActivityTypeId Int
 
 -- | Type of activity in a facility.
 data ActivityType = ActivityType
-  { _activityTypeName       :: Text
-  , _activityTypeId         :: ActivityTypeId
-  , _activityTypeFacilityId :: FacilityId
+  { _activityTypeName       :: {-# UNPACK #-} !Text
+  , _activityTypeId         :: {-# UNPACK #-} !ActivityTypeId
+  , _activityTypeFacilityId :: {-# UNPACK #-} !FacilityId
   } deriving (Show, Eq)
 
 $(makeClassy ''ActivityType)
@@ -169,9 +184,9 @@ newtype ActivityId = ActivityId Int
 
 -- | Specific activity.
 data Activity = Activity
-  { _activityName           :: Text
-  , _activityId             :: ActivityId
-  , _activityActivityTypeId :: ActivityTypeId
+  { _activityName           :: {-# UNPACK #-} !Text
+  , _activityId             :: {-# UNPACK #-} !ActivityId
+  , _activityActivityTypeId :: {-# UNPACK #-} !ActivityTypeId
   } deriving (Show, Eq)
 
 $(makeClassy ''Activity)
@@ -190,18 +205,18 @@ newtype TimetableEntryId = TimetableEntryId Int
 
 -- | Entry in a timetable.
 data TimetableEntry = TimetableEntry
-  { _timetableEntryParentId       :: Int
+  { _timetableEntryParentId       :: {-# UNPACK #-} !Int
   -- , _timetableEntryParentTitle      :: Maybe Text
   -- , _timetableEntryName             :: Text
-  , _timetableEntryId             :: TimetableEntryId
-  , _timetableEntryRemainingSlots :: Int
+  , _timetableEntryId             :: {-# UNPACK #-} !TimetableEntryId
+  , _timetableEntryRemainingSlots :: {-# UNPACK #-} !Int
   -- , _timetableEntryInstructor       :: Maybe Text
   -- , _timetableEntryLocation         :: Text
   -- , _timetableEntryFacility         :: Text
   -- , _timetableEntryFacilityIt       :: FacilityId
-  , _timetableEntryDate           :: Text
-  , _timetableEntryStartTime      :: Text
-  , _timetableEntryEndTime        :: Text
+  , _timetableEntryDate           :: {-# UNPACK #-} !Text
+  , _timetableEntryStartTime      :: {-# UNPACK #-} !Text
+  , _timetableEntryEndTime        :: {-# UNPACK #-} !Text
   -- , _timetableEntryCanCancel        :: Bool
   -- , _timetableEntryStatus           :: Maybe Text
   -- , _timetableEntryExerciseCategory :: Maybe Text
@@ -227,10 +242,24 @@ emptyTimetableEntry = TimetableEntry
 newtype BasketItemId = BasketItemId Int
   deriving (Show, Eq, FromJSON, ToJSON)
 
+-- | Status of BasketItem credit allocation
+data BookingCreditStatus =
+    Allocated
+  { _bookingCreditStatusUnallocateUrl :: {-# UNPACK #-} !Text
+  }
+  | Unallocated
+  { _bookingCreditStatusAllocateUrl :: {-# UNPACK #-} !Text
+  } deriving (Show, Eq)
+
+$(makeClassy ''BookingCreditStatus)
+$(deriveJSON (jsonOptionsRemovePrefix "_bookingCredit") ''BookingCreditStatus)
+$(makePrisms ''BookingCreditStatus)
+
 -- | Item in a basket.
 data BasketItem = BasketItem
-  { _basketItemId                       :: BasketItemId
-  , _basketItemAllocateBookingCreditUrl :: Text
+  { _basketItemId           :: {-# UNPACK #-} !BasketItemId
+  , _basketItemCreditStatus ::                !BookingCreditStatus
+  , _basketItemRemoveUrl    :: {-# UNPACK #-} !Text
   } deriving (Show, Eq)
 
 $(makeClassy ''BasketItem)
@@ -238,6 +267,14 @@ $(deriveJSON (jsonOptionsRemovePrefix "_basketItem") ''BasketItem)
 $(makePrisms ''BasketItem)
 
 emptyBasketItem = BasketItem
-  { _basketItemId       = BasketItemId 0
-  , _basketItemAllocateBookingCreditUrl = ""
+  { _basketItemId           = BasketItemId 0
+  , _basketItemCreditStatus = Unallocated ""
+  , _basketItemRemoveUrl    = ""
   }
+
+data ScrapingException = ScrapingException (Response B.ByteString)
+  deriving (Show, Typeable)
+instance Exception ScrapingException
+
+_ScrapingException :: Prism' SomeException ScrapingException
+_ScrapingException = exception

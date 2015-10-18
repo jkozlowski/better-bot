@@ -18,7 +18,8 @@ main = defaultMain tests
 tests :: TestTree
 tests = testGroup "Tests" [
     unitTests
-  , testCase "BasketScraper can scrape html" basketScraperTest
+  , testCase "BasketScraper can scrape unallocated basket" unallocatedBasketTest
+  , testCase "BasketScraper can scrape allocated basket"   allocatedBasketTest
   ]
 
 unitTests = testGroup "Unit tests" $ mconcat
@@ -30,13 +31,29 @@ unitTests = testGroup "Unit tests" $ mconcat
   , jsonTests "TimetableEntry" timetableEntryJSON     timetableEntryValue
   ]
 
-basketScraperTest :: Assertion
-basketScraperTest = do
-  html <- B.readFile "test/basket.html"
+allocatedBasketTest :: Assertion
+allocatedBasketTest =
+  let creditStatus = _Allocated # "/enterprise/Basket/UnAllocateBookingCredit?bookingid=enterprise"
+      expected = emptyBasketItem & basketItemId     .~ BasketItemId 1
+                                 & basketItemCreditStatus .~ creditStatus
+                                 & basketItemRemoveUrl .~ "/enterprise/Basket/RemoveBooking?bookingId=13189149"
+      file = "test/allocated-basket.html"
+  in basketScraperTest file expected
+
+unallocatedBasketTest :: Assertion
+unallocatedBasketTest =
+  let creditStatus = _Unallocated # "/enterprise/Basket/AllocateBookingCredit?bookingid=12495531"
+      expected = emptyBasketItem & basketItemId           .~ BasketItemId 1
+                                 & basketItemCreditStatus .~ creditStatus
+                                 & basketItemRemoveUrl    .~ "/enterprise/Basket/RemoveBooking?bookingId=13093372"
+      file = "test/unallocated-basket.html"
+  in basketScraperTest file expected
+
+basketScraperTest :: FilePath -> BasketItem -> Assertion
+basketScraperTest file basketItem = do
+  html <- B.readFile file
   let actual = scrapeStringLike html basketScraper
-  let expected = Just [ emptyBasketItem & basketItemId     .~ BasketItemId 1
-                                        & basketItemAllocateBookingCreditUrl .~ "/enterprise/Basket/AllocateBookingCredit?bookingid=12495531"
-                      ]
+  let expected = Just [ basketItem ]
   expected @=? actual
 
 jsonTests typeName json value =

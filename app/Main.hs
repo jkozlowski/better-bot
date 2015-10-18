@@ -1,7 +1,8 @@
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE ConstraintKinds   #-}
+{-# LANGUAGE ConstraintKinds     #-}
+{-# LANGUAGE LambdaCase          #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TemplateHaskell     #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Main
@@ -14,27 +15,32 @@
 -----------------------------------------------------------------------------
 module Main where
 
+import           Control.Exception
 import           Control.Lens
+import           Control.Monad
+import           Control.Monad.Catch    (MonadThrow)
+import           Control.Monad.IO.Class (MonadIO, liftIO)
 import           Control.Monad.Logger
-import           Control.Monad.IO.Class ( MonadIO, liftIO )
-import           Data.Monoid            ( (<>) )
-import           Data.Text              ( Text )
+import           Data.List.Lens
+import           Data.Monoid            ((<>))
+import           Data.Text              (Text)
+import qualified Data.Text              as T
 import           Network.Better.Session
 import           Network.Better.Types
-import           System.Exit            (exitFailure)
-import qualified Data.Text              as T
 import qualified Network.Wreq.Session   as S
+import           System.Exit            (exitFailure)
 
 main :: IO ()
 main = do
   s <- createSession
-  runStdoutLoggingT (bookActivity s "Oasis" "Other Activities" "Squash"
-                                    "Mon, 19 Oct" "12:40")
+  catch (runStdoutLoggingT (bookActivity s "Oasis" "Other Activities" "Squash"
+                                           "Thu, 22 Oct" "16:00"))
+        (\(e::SomeException) -> runStdoutLoggingT($(logError) $ "Could not book: " <> T.pack (show e)))
   return ()
 
 type MonadIOLog m = (MonadIO m, MonadLogger m)
 
-bookActivity :: MonadIOLog m
+bookActivity :: (MonadThrow m, MonadIOLog m)
              => S.Session
              -> Text
              -> Text
@@ -48,9 +54,9 @@ bookActivity s
              activityName'
              date'
              startTime'
- = do basketItems <- getBasket s
-
+ = do
       -- Make sure the basket is empty
+      clearBasket s
       checkBasketCount s 0
 
       -- Lookup the facility
@@ -69,15 +75,21 @@ bookActivity s
       -- Book the timetable slot
       bookSlot s (timetableEntry ^. timetableEntryId)
 
-      basketCount <- getBasketCount s
-
       checkBasketCount s 1
 
       basketItems <- getBasket s
 
-      $(logInfo) $ "Basket: " <> (T.pack . show $ basketItems)
+      case basketItems ^? ix 0 of
+        Just basketItem -> do
+          $(logInfo) $ "Allocating credit for " <> T.pack (show basketItem)
+          allocateBookingCredit s basketItem
 
-      return ()
+          $(logInfo) "Submitting the basket"
+          pay s
+
+        Nothing         -> exitWithError $ "Basket empty" <> show basketItems
+
+      checkBasketCount s 0
 
 getFacilityOrExit :: MonadIOLog m => S.Session -> Text -> m Facility
 getFacilityOrExit s toFind =
@@ -163,18 +175,19 @@ getTimetableEntryOrExit s
                        (T.pack . show $ e ^. timetableEntryId)
           return e
 
-checkBasketCount :: MonadIO m => S.Session -> Int -> m ()
+checkBasketCount :: (MonadThrow m, MonadIO m) => S.Session -> Int -> m ()
 checkBasketCount s expected = do
-  basketCount <- getBasketCount s
-  let count = basketCount ^. basketBasketCount
-  if count /= expected
-    then exitWithError $ "Basket count not equal to expected: current count=" <>
-                         show count                                           <>
-                         ", expected="                                        <>
-                         show expected
-    else return ()
+  basketItems <- getBasket s
+  let count = length basketItems
+  when (count /= expected) $
+    exitWithError $ "Basket count not equal to expected: current count=" <>
+                    show count                                           <>
+                    ", expected="                                        <>
+                    show expected                                        <>
+                    ", basketItems="                                     <>
+                    show basketItems
 
 exitWithError :: MonadIO m => Show a => a -> m b
 exitWithError msg = liftIO $ do
-  putStrLn $ show msg
+  print msg
   exitFailure

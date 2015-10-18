@@ -12,55 +12,62 @@
 -----------------------------------------------------------------------------
 module Network.Better.Session where
 
-
-import           Control.Exception       ( bracket_ )
+import           Control.Applicative        ((<|>))
+import           Control.Exception          (Exception, bracket_)
+import           Control.Exception.Lens
 import           Control.Lens
-import           Control.Monad           ( void )
-import           Control.Monad.IO.Class  ( MonadIO, liftIO )
-import           Data.List               ( find )
-import           Data.Monoid             ( (<>) )
-import           Network.Better.Types    ( Booking(..)
-                                         , Facility(..), facilityName
-                                         , FacilityId(..) , BasketCount(..)
-                                         , ActivityTypeId(..)
-                                         , ActivityType(..), activityTypeName
-                                         , ActivityId(..)
-                                         , Activity(..), activityName
-                                         , TimetableEntryId(..)
-                                         , TimetableEntry(..)
-                                         , timetableEntryDate
-                                         , timetableEntryStartTime
-                                         , BasketItemId(..)
-                                         , BasketItem(..)
-                                         , emptyBasketItem
-                                         , basketItemId
-                                         , basketItemAllocateBookingCreditUrl )
-import           Network.Wreq
-import           System.IO               ( stdout, stdin, hGetEcho, hFlush
-                                         , hSetEcho )
-import           Text.HTML.Scalpel
-import           Text.Regex.TDFA
-import qualified Debug.Trace                as Debug
+import           Control.Lens.Extras
+import           Control.Monad              (forM_, unless, void, when)
+import           Control.Monad.Catch        (MonadCatch, MonadThrow (throwM))
+import           Control.Monad.IO.Class     (MonadIO, liftIO)
 import qualified Data.Aeson                 as Aeson
+import qualified Data.ByteString            as BS
 import qualified Data.ByteString.Lazy       as B
 import qualified Data.ByteString.Lazy.Char8 as B8
-import qualified Data.ByteString            as BS
+import           Data.List                  (find)
+import           Data.Maybe                 (fromMaybe)
+import           Data.Monoid                ((<>))
 import qualified Data.Text                  as T
 import qualified Data.Text.Lazy             as TL
 import qualified Data.Text.Lazy.Encoding    as TL
+import           Data.Typeable
+import qualified Debug.Trace                as Debug
+import           Network.Better.Types       (Activity (..), ActivityId (..),
+                                             ActivityType (..),
+                                             ActivityTypeId (..),
+                                             BasketCount (..), BasketItem (..),
+                                             BasketItemId (..), Booking (..),
+                                             BookingCreditStatus (..),
+                                             Facility (..), FacilityId (..),
+                                             ScrapingException (..),
+                                             TimetableEntry (..),
+                                             TimetableEntryId (..),
+                                             activityName, activityTypeName,
+                                             basketItemCreditStatus,
+                                             basketItemId, basketItemRemoveUrl,
+                                             bookingCreditStatusAllocateUrl,
+                                             bookingCreditStatusUnallocateUrl,
+                                             emptyBasketItem, facilityName,
+                                             timetableEntryDate,
+                                             timetableEntryStartTime,
+                                             _Allocated, _ScrapingException,
+                                             _Unallocated)
+import qualified Network.HTTP.Client        as HTTP
+import           Network.Wreq
 import qualified Network.Wreq.Session       as S
-
-
-import Control.Monad (unless)
-import Control.Monad.Catch (MonadThrow(throwM))
-import Data.Maybe (fromMaybe)
-import qualified Network.HTTP.Client as HTTP
+import           System.IO                  (hFlush, hGetEcho, hSetEcho, stdin,
+                                             stdout)
+import           Text.HTML.Scalpel
+import           Text.Regex.TDFA
 
 baseURL :: String
-baseURL = "https://gll.legendonlineservices.co.uk/enterprise"
+baseURL = "https://gll.legendonlineservices.co.uk"
 
 apiBaseURL :: String
-apiBaseURL = "https://gll.legendonlineservices.co.uk/enterprise/mobile"
+apiBaseURL = baseURL <> "/enterprise"
+
+mobileAPIBaseURL :: String
+mobileAPIBaseURL = "https://gll.legendonlineservices.co.uk/enterprise/mobile"
 
 createSession :: MonadIO m => m S.Session
 createSession = liftIO $ S.withSession $ \sess -> do
@@ -71,7 +78,7 @@ login :: MonadIO m => S.Session -> String -> m ()
 login s email = do
   password <- getPassword
   void . liftIO $ S.post s loginUrl (formParams password)
- where loginUrl = baseURL <> "/account/login"
+ where loginUrl = apiBaseURL <> "/account/login"
        formParams password =
                     [ "login.IgnoreCookies"  := ("True"  :: B.ByteString)
                     , "login.HashedPassword" := ("False" :: B.ByteString)
@@ -163,29 +170,61 @@ bookSlot :: MonadIO m
          -> TimetableEntryId
          -> m (Response B.ByteString)
 bookSlot s (TimetableEntryId timetableEntryId)
- = liftIO $ S.getWith opts s "https://gll.legendonlineservices.co.uk/enterprise/bookingscentre/addsportshallbooking"
+ = liftIO $ S.getWith opts s (apiBaseURL <> "/bookingscentre/addsportshallbooking")
  where opts = defaults & param "slotId" .~ paramVal timetableEntryId
 
-getBasket :: MonadIO m => S.Session -> m (Maybe [BasketItem])
+getBasket :: (MonadThrow m, MonadIO m) => S.Session -> m [BasketItem]
 getBasket s = do
-  r <- liftIO $ S.getWith defaults s ("https://gll.legendonlineservices.co.uk/enterprise/basket")
-  return $! scrapeStringLike (r ^. responseBody) basketScraper
+  let url = apiBaseURL <> "/basket"
+  r <- liftIO $ S.getWith defaults s url
+  case scrapeStringLike (r ^. responseBody) basketScraper of
+    Just basketItems -> return $! basketItems
+    Nothing          -> throwingM _ScrapingException (ScrapingException r)
 
 basketScraper :: Scraper B.ByteString [BasketItem]
 basketScraper = chroots divBasketItem basketItem
   where basketItem :: Scraper B.ByteString BasketItem
         basketItem = do
-          allocateBooking <- attr "href" aHref
+          creditStatus  <- unallocatedItem <|> allocatedItem
+          removeBooking <- attr href removeBookingUrl
           return $! emptyBasketItem & basketItemId     .~ BasketItemId 1
-                                    & basketItemAllocateBookingCreditUrl .~ (TL.toStrict . TL.decodeUtf8 $ allocateBooking)
+                                    & basketItemCreditStatus .~ creditStatus
+                                    & basketItemRemoveUrl .~ decodeUtf8 removeBooking
 
+        href = "href"
+        s (s' :: String) = s'
         toRegex = makeRegexOpts defaultCompOpt { multiline = False } defaultExecOpt
+        decodeUtf8 = TL.toStrict . TL.decodeUtf8
 
-        divBasketItem :: Selector
-        divBasketItem = (("div" :: String) @: [hasClass "basketItem"])
+        unallocatedItem = prismSelector _Unallocated allocateBookingUrl
+        allocatedItem = prismSelector _Allocated unallocateBookingUrl
+        prismSelector prism selector = ((prism #) . decodeUtf8) <$> attr href selector
 
-        aHref :: Selector
-        aHref = ("a" :: String) @: [("href" :: String) @=~ (toRegex ("/enterprise/Basket/AllocateBookingCredit.*" :: String))]
+        divBasketItem = s "div" @: [hasClass "basketItem"]
+
+        allocateBookingUrl = regexSelector "/enterprise/Basket/AllocateBookingCredit\\?bookingid=\\d*"
+        unallocateBookingUrl = regexSelector "/enterprise/Basket/UnAllocateBookingCredit\\?bookingid=.*"
+        removeBookingUrl = regexSelector "/enterprise/Basket/RemoveBooking\\?bookingId=\\d*"
+
+        regexSelector regex = s "a" @: [href @=~ toRegex (regex :: String)]
+
+allocateBookingCredit :: (MonadIO m) => S.Session -> BasketItem -> m ()
+allocateBookingCredit s basketItem = void $
+  case basketItem ^? basketItemCreditStatus . _Unallocated of
+    Just allocateUrl -> void $ do
+      let url = baseURL <> T.unpack allocateUrl
+      liftIO $ S.getWith defaults s url
+    Nothing          -> liftIO . putStrLn $ "Already allocated"
+
+pay :: (MonadIO m) => S.Session -> m ()
+pay s = void . liftIO $ S.getWith defaults s (apiBaseURL <> "/Basket/Pay")
+
+clearBasket :: (MonadThrow m, MonadIO m) => S.Session -> m ()
+clearBasket s = do
+  basketItems <- getBasket s
+  forM_ basketItems $ \basketItem -> do
+    let url = baseURL <> T.unpack (basketItem ^. basketItemRemoveUrl)
+    liftIO $ S.getWith defaults s url
 
 -- |
 -- Helper functions
@@ -200,7 +239,7 @@ getAsJSONWith :: (MonadIO m, Aeson.FromJSON a)
               -> m a
 getAsJSONWith options s apiCall = liftIO $ do
    r <- asJSON1 =<<
-         S.getWith opts s (apiBaseURL <> "/" <> apiCall)
+         S.getWith opts s (mobileAPIBaseURL <> "/" <> apiCall)
    return $! r ^. responseBody
  where opts = options & header "Accept" .~ ["application/json"]
 
