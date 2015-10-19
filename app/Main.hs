@@ -37,7 +37,7 @@ import           Options.Applicative         (execParser)
 import           System.Exit                 (exitFailure, exitSuccess)
 import qualified Text.Show.Pretty            as Pretty
 import           Types                       (BookingConfig, Config, DayOfWeek,
-                                              Opts(..), bookingConfig,
+                                              Opts (..), bookingConfig,
                                               bookingConfigConfig,
                                               bookingConfigSlots, configEmail,
                                               configPassword,
@@ -46,9 +46,7 @@ import           Types                       (BookingConfig, Config, DayOfWeek,
                                               _Password, _Slots)
 
 main :: IO ()
-main = -- execParser optsParserInfo >>= \opts -> do
-       do
-  let opts = Opts Nothing
+main = execParser optsParserInfo >>= \opts -> do
   maybeConfig <- readConfig
   case maybeConfig of
     Left e  -> exitWithError e
@@ -69,8 +67,8 @@ withCurrentTime c = do
   let dayOfWeek                = dayOfWeekFromUTCTime currentDay
   let sameDayNextWeekDayOfWeek = dayOfWeekFromUTCTime sameDayNextWeek
 
-  $(logInfo) $ "Today is "     <> (pack . Time.showGregorian $ currentDay)
-  $(logInfo) $ "Next week is " <> (pack . Time.showGregorian $ sameDayNextWeek)
+  $(logInfo) $ "Today is "       <> (pack . Time.showGregorian $ currentDay)
+  $(logInfo) $ "Next week is "   <> (pack . Time.showGregorian $ sameDayNextWeek)
   $(logInfo) $ "Day of week is " <> (pack . show $ dayOfWeek)
 
   when (dayOfWeek /= sameDayNextWeekDayOfWeek) $
@@ -79,7 +77,7 @@ withCurrentTime c = do
                    "is not the same as day of week for next week (" <>
                      show sameDayNextWeekDayOfWeek <> ")")
 
-  withParticularDay c currentDay
+  withParticularDay c sameDayNextWeek
 
 withParticularDay :: (MonadCatch m, MonadLoggerIO m) => [BookingConfig] -> Time.Day -> m ()
 withParticularDay c currentDay = do

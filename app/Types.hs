@@ -45,6 +45,7 @@ optsParser :: Parser Opts
 optsParser = Opts
   <$> option (Just <$> dateReader)
       ( long "date"
+     <> value Nothing
      <> metavar "DATE"
      <> help ("Date in yyyy-mm-dd format. If specified, "                <>
               "this date will be used for the bookings and appropriate " <>
