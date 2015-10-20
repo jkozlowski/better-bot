@@ -16,6 +16,7 @@
 module BookSlot where
 
 import           Control.Exception
+import           Control.Exception.Lens (throwingM)
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Catch    (MonadThrow)
@@ -32,9 +33,9 @@ import qualified Network.Wreq.Session   as S
 import           System.Exit            (exitFailure)
 import           Types
 
-type MonadIOLog m = (MonadIO m, MonadLogger m)
+type MonadIOLog m = (MonadIO m, MonadLogger m, MonadThrow m)
 
-bookActivity :: (MonadThrow m, MonadIOLog m)
+bookActivity :: (MonadIO m, MonadLogger m, MonadThrow m)
              => S.Session
              -> Config
              -> Day
@@ -106,10 +107,10 @@ getFacilityOrExit s toFind =
           return facility
 
 getActivityTypeOrExit :: MonadIOLog m
-                  => S.Session
-                  -> Facility
-                  -> T.Text
-                  -> m ActivityType
+                      => S.Session
+                      -> Facility
+                      -> T.Text
+                      -> m ActivityType
 getActivityTypeOrExit s facility toFind =
   getActivityTypeByName s (facility ^. facilityId) toFind >>=
     \case
@@ -188,7 +189,5 @@ checkBasketCount s expected = do
                     ", basketItems="                                     <>
                     show basketItems
 
-exitWithError :: MonadIO m => Show a => a -> m b
-exitWithError msg = liftIO $ do
-  print msg
-  exitFailure
+exitWithError :: MonadThrow m => Show a => a -> m b
+exitWithError msg = throwingM _BookingException (BookingException $ show msg)

@@ -57,6 +57,8 @@ executable better-bot-exe
                      , retry
                      , pretty-show
                      , optparse-applicative
+                     , async
+                     , monad-control
   default-language:    Haskell2010
 
 test-suite better-bot-test

@@ -15,7 +15,10 @@
 -----------------------------------------------------------------------------
 module Types where
 
+import           Control.Exception.Lens      (exception)
+import           Control.Lens
 import           Control.Lens.TH             (makeClassy, makePrisms)
+import           Control.Monad.Catch         (Exception, SomeException)
 import           Data.Aeson
 import qualified Data.Aeson.TH               as A
 import qualified Data.Map.Strict             as M
@@ -26,6 +29,7 @@ import qualified Data.Time                   as Time
 import qualified Data.Time.Calendar.WeekDate as Time
 import qualified Data.Time.Clock             as Time
 import qualified Data.Time.Format            as Time
+import           Data.Typeable               (Typeable)
 import qualified Data.Yaml                   as Yaml
 import           Network.Better.Aeson        (decapitalizeJsonOptionsRemovePrefix)
 import           Options.Applicative
@@ -132,3 +136,10 @@ $(A.deriveJSON (decapitalizeJsonOptionsRemovePrefix "_bookingConfig") ''BookingC
 -- TODO: Check that there are no duplicate sections in the config
 readConfig :: IO (Either Yaml.ParseException [BookingConfig])
 readConfig = Yaml.decodeFileEither "config.yaml"
+
+data BookingException = BookingException String
+  deriving (Show, Typeable)
+instance Exception BookingException
+
+_BookingException :: Prism' SomeException BookingException
+_BookingException = exception

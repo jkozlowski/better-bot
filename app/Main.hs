@@ -3,6 +3,7 @@
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE FlexibleContexts    #-}
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Main
@@ -16,12 +17,17 @@
 module Main where
 
 import           BookSlot
+import           Control.Concurrent.Async    (async, mapConcurrently)
 import           Control.Exception           (SomeException)
 import           Control.Lens
 import           Control.Monad
-import           Control.Monad.Catch         (MonadCatch, MonadThrow, catch)
+import           Control.Monad.Catch         (MonadCatch, MonadMask, MonadThrow,
+                                              catch)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Logger
+import           Control.Monad.Trans.Control
+import           Control.Retry               (constantDelay,
+                                              limitRetriesByDelay, recoverAll)
 import           Data.List                   (concatMap)
 import           Data.List.Lens
 import qualified Data.Map.Strict             as Map
@@ -56,9 +62,8 @@ main = execParser optsParserInfo >>= \opts -> do
         Opts (Just date) -> withParticularDay c date
         Opts Nothing     -> withCurrentTime c
 
-withCurrentTime :: (MonadCatch m, MonadLoggerIO m)
-                => [BookingConfig]
-                -> m ()
+withCurrentTime :: (MonadCatch m, MonadLogger m, MonadMask m, MonadIO m)
+                => [BookingConfig] -> m ()
 withCurrentTime c = do
   currentTime <- liftIO Time.getCurrentTime
 
@@ -79,7 +84,8 @@ withCurrentTime c = do
 
   withParticularDay c sameDayNextWeek
 
-withParticularDay :: (MonadCatch m, MonadLoggerIO m) => [BookingConfig] -> Time.Day -> m ()
+withParticularDay :: (MonadCatch m, MonadMask m, MonadLogger m, MonadIO m)
+                  => [BookingConfig] -> Time.Day -> m ()
 withParticularDay c currentDay = do
 
   let dayOfWeek                = dayOfWeekFromUTCTime currentDay
@@ -91,12 +97,30 @@ withParticularDay c currentDay = do
 
   $(logInfo) $ "Found slots " <> (pack . Pretty.ppShow $ slots)
 
-  forM_ slots $ \(c, slot) -> do
-    let email = c ^. configEmail
-    let pass  = c ^. configPassword . _Password
-    s <- createSession email pass
-    catch (bookActivity s c currentDay slot)
-          (\(e::SomeException) -> $(logError) $ "Could not book: " <> pack (show e))
+
+  -- _ <- liftIO $ mapConcurrently (\(c, slot) -> do
+  --   let email = c ^. configEmail
+  --   let pass  = c ^. configPassword . _Password
+  --   s <- createSession email pass
+  --   liftIO $ bookActivity s c currentDay slot) slots
+  --   --retry $ liftIO $
+
+  $(logInfo) "Finished"
+
+retry :: (MonadIO m, MonadMask m) => m a -> m a
+retry = recoverAll (limitRetriesByDelay timeoutMicros $ constantDelay delayMicros)
+  where delayMicros     = 1 * microsInSeconds
+        timeoutMicros   = 1 * 60 * microsInSeconds
+        microsInSeconds = 1000000
+
+bookAll :: --(MonadLoggerIO m, MonadLogger IO, MonadIO m)
+        -- =>
+        [(Config, Text)] -> Time.Day -> IO [()]
+bookAll slots currentDay = mapConcurrently (\(c, slot) -> do
+  let email = c ^. configEmail
+  let pass  = c ^. configPassword . _Password
+  s <- createSession email pass
+  bookActivity s c currentDay slot) slots
 
 findSlots :: DayOfWeek -> [BookingConfig] -> [(Config, Text)]
 findSlots day = concatMap go
