@@ -1,17 +1,36 @@
-cache:
-  apt: true
-  directories:
-    - $HOME/.stack
+env:
+  global:
+    - secure: BF/AiF2pesG0KgThvgeOOAGPFVuhObokV7bkfCMyP2ob+FeVMGY5EPYG6Z55/uZ8K3TFKdI0Cmb6kEcaU8QYjAhx+4R6r6obfkgX4SUcCzaUeMab/Wgmg1O+y6rKaGw/rSoc7U+G5PBh70NetO828HnDg5HymGb4r9aIc3U5hR7mdxS2tZIewaRm2CYtt/MQSy3cYC6XkpetSR+DnEWiCCOAg6wuK+f4+Skh3ssmBSqJAiN+LTET8b1xiwQ9Wd4g7HnrkajjCqAC6il+scaPOpalGPJ66Hp+UDq1m8mOEnltnWi2J7DgiSfmZrwHDdDRdMqGTfJesRaecV5PSiCwKImnIIBsCm13e5kqsj6IF+mMOUCCXsxx2knGeVChpaG+IpYVzb6kjqxiOzWeLrIM+rzeWY3ER5ktXCVoVymb3zyqeig1p7iziT2qJj07iUCD1bu2qO8O7L3gY3gUdvYzORFRNw7dE/aRGk7b/k8YdqXFiSUyq2D3ZCxLPjPnEoX0GRMbdqSLPMC0qHKcEf6GWMFs288u7pNAS+eokZJE0Tk/yxjAJwNfJZb3nZaXVIne2xS0Hqf4ujZFau5lMAm6ZbWUAABpkzJGY9uj9VXXolXrZlvVZbDVw77WYzHCjF1ZECro6Td6ZkgKqZChbQ6wdbiyVWLGmQQB1QkwsuaYAZg=
+    - secure: nM24A5P1XTR7RKZHpHoeAyLU/axz5WH+zYAwkKbYxbcrHtCNIOXo9va1HyjBWu83D+k2FTz2WWVG36P1NJa6R8wyQdZ6jUZev9VSO1Hk3ean3RokieLp4d2nYUD1j3MCQCqCtRMm5z2rUDtDBR77345YDA2Y9ZBaUh+FP2PiyjgKU++8KnkCV2Pho9bdMIutQP7oMsEnICYrkGPP7ttbbes54pTomzVsKhByHLcQD7hakqrZ8gqWOJQ8qUO6J8Vsicws2gUIUp1+rypqD6+dn/xSACGHkZy71GEAvM2sye94ThNsVcadL1MkCKFtQ+ZcN5oFxtR3kMw2IGhGiugRsN66wBs4Pe9SeBfCjtDQtWZER1TMrRjMV4MgHJ0OMh2lqB5eIB3Xvxux66KIb4DaIHCmXNoTryPlUgEyYbqaLkx6Ola28uHhHcZpuHr8CzdmvNjYL+khbVfv9/9iy4PEiED55sHshunvuaIuQ14TqJMSJcuuh1QuIDORFxqTFt67FiMTaAX7kl7i39H1o1sQcPm3dp0Dd7SyCq32jYSOA1MVsJaWRe6Be+Deskb4SI2Y1dRZbmM5g2ckxKzps/2atxRtRJxopcL2vrSbbwMIdDEKKbiVFGb7hT3fmQEHt3dTxJRBHWG2u20n3jy4uRCp51UyA36ctByDhThwiqp0B5w=
+    - secure: nd1MML40V0Tsce05Ae/7/ClOha5FZsI+6WN3VBDBWTZQuZ8yQm3dni4wyPCZhMNZ0fyTAt/J6+ojfpFfx1pmJxcINiW3TppLXg28piQ25iGCLCQ4Ta3K9LaVFVU7hANJnbQO2MkyRAYLVsfqOgXrzc4J005cE0uEjUtVgvTKD69hNsG6Xrm4ydA4FL1cr3T8tLPU5jwEkO0jsjP2cr2hH1RKoY/ZVi7E9a3cV7iSf0lMBWAaGgRln9RWL7qK4rHBmeNN5datvFaN9aWP08L++5J3X4YBnd2CYTiY4ItainEY45R/Jfwry7sYwQTWYmMpPDO/L2sqQqdaOKy178zTzn2vrF/o7zN7VxHZaQ4emyIpwHQkgZJJusdgLvvRgcxPNRkCh8ZfwQg0DJPkXyc6zJq6amxbhBWYEFNbRivpoSWyOcQVnzVMnUjrpE8+ryVKAf/BzB6QiKJGftQM/iLuC02nKTGIBthH+4ReuHGRtTOnwW1Om7YsABnYgE8YFvW7nVVm8l1flOaOIvl2Hjq1KVch1pwH8vmCdR1fb6uK3sb/zp+uM0RlR9w43cgN0iR3BWE1WSJNzu6qE0T/h32d5Qgew+HrXLkki/9QY0aRPbsGAuD0emRVDOI2N7kS+w5JpwKaVlY10jyP7JlElk0jU7kjCIY1+Czya3AQoJBiYIw=
+    - secure: VHy34brJkuQXY2Rei3DYveHQ32ETSnnzaOxVyjFODPnbTQxrUCOZjpmy9q/8d6ZJxuSYQ6d6F1eb07pAbrVJfouepi8tdEEi3421XZU0+nBqWFBxILvhr7ZBoibzpMcwrBs/l4sK77fAJzbLDnaoJu+KQijMPFiV0a+Jb1uzTqNcoYiQmaAlGd93G2HFr58pQHSqwnC50ihmTQ+dhyXyFO1RHgHbxgnN2E8DtQ6cv9TpyWUl0LzjYS7LNpeBU6kojPaTv9AevaK7HE6xoiy0LPnQOb/YYY2axG0vHz8zSuAUh1xJONzkYpYfyGqmYWcWXw2bgtgHjQfTCCkaEt78KCq2PJmCc0br8pU1ZVaJg0S/z2zw6Nr2KNNpOhcPlfE8UWMNR0hDyLCBH+QTiCfXJ2ZbvcmD12EKJaIlrGKfGckf2Eta+hj0vBKcJDGARqUDFHM7LB/uX1L5hodm+cAnQqXol6tBsQ66wTjQwiYIEk1sCNATpLBeJwwwXzuYGb3ZcFfi4cz9eUIJRcCQ4xP9TOMBwAcFzX5Mnu20JEW+mg5ChhBHbchO1f6BfPxJJjhdYmMV9f6aCAPw7firaVnKOwbr9jMzmmlRgEDffecr9tUPvmV1UjrkOZ+KrHiQTH0ZF0ZtRoFbtXRP95tbjY0MSldHK5y25nbhIdfBJKBoEDg=
+    - secure: DIoKhujENOkkHBMBNeNTii0xFFaKgpE7iX0Hp8M970PHWtcdUJOuYgU3nwwyAf4h1jyCZqITpKgMPaz53lZ0SpILlAnq9jL2r4p7sCrdmhWKCubVxuoHIZNHJ3cpo/zU642GJS/R5eNmPd78J3KsK38DAPapjnG2YMGhMkV3g5eIp3KeEt4Nv+v5i9f9j0fVsW7pYGoSLqWrpCHZDkwTYJEuY5+/G51aM+Ur0bTutmvypqWwlxCLUuujfntjm6QXK6XyTu14cTYI95fxR8l3AOMFjaM6gSw4utNw6MP9Cg/qBP7+oZ5i9TX2mKa3wCd9kJ0S2al2VanKHTlzbiGsZL6206Nqu6UkCzN8uOHSc7xYt/SP/iPNnYnMfdTbifhNgLr1R4+ZuUYlvrnnj6TNPmq+4YfrriZrxhxqgp89xg0Aamc/DCY1dwQh7rA9RMv1eXBQNWXjz1T+Uhfal9VpnJLCIcrLDMXS2hKmzpCy7CV8PFdbq1dW/w+oTSipxC4pOgp/xsRVZJ3Qhv7Gu8pNkVMPWTdpJKyhjeC0NeXQPA1wVZPaAb9EKLuGwdaFKKZBAIRlctYO7uggvrPorBiT7HGrSpUTfsBoCGnrPzE7rQl9npeKbQEeFmU5DU0oK7/PindB2NgFoBa4Dvn4d4m51flXZPP0QXhCxuhs+sUUaJs=
+    - DOCKER_IMAGE="jkozlowski/amazon-eu-ireland:ami-a10897d6"
+    - CHECKOUT_DIR="/home/travis/build/jkozlowski/better-bot"
+    - MOUNT_DIR="/root/better-bot"
+    - STACK_CMDS="cd /root/better-bot; stack build; stack test; stack install;
+                  mkdir dist; cp ~/.local/bin/better-bot-exe dist"
+
+deploy:
+  provider: s3
+  access_key_id: $S3_ACCESS_KEY_ID
+  secret_access_key: $S3_SECRET_ACCESS_KEY
+  bucket: "better-bot"
+  skip_cleanup: true
+  acl: bucket_owner_full_control
+  local_dir: build
+  upload-dir: bin
+
+sudo: required
+
+services:
+  - docker
 
 before_install:
-  - wget -q -O- http://download.fpcomplete.com/ubuntu/fpco.key | sudo apt-key add -
-  - echo 'deb http://download.fpcomplete.com/ubuntu/precise stable main' | sudo tee /etc/apt/sources.list.d/fpco.list
-  - sudo apt-get update
-  - sudo apt-get install stack -y
-  - stack --version
-  - stack --help
-  - stack setup
+  - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
+  - docker pull "$DOCKER_IMAGE"
 
 script:
-  - stack build
-  - stack test
+  - docker run -v "$CHECKOUT_DIR:$MOUNT_DIR" "$DOCKER_IMAGE" /bin/sh -c "$STACK_CMDS"
+  - mkdir build
+  - zip "build/better-bot-exe.zip" main.js dist/better-bot-exe

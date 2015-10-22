@@ -11,6 +11,7 @@ copyright:           2015 Jakub Kozlowski
 category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
+extra-source-files:  main.js
 
 library
   hs-source-dirs:      src
