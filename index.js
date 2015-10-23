@@ -14,6 +14,10 @@ exports.handler = function(event, context) {
           console.log(fs.readdirSync("/usr/lib"));
           console.log(fs.readdirSync("/usr/lib64"));
 
+          fs.symlinkSync("/usr/lib64/libgmp.so.3", "/usr/lib64/libgmp.so.10")
+
+          console.log(fs.readdirSync("/usr/lib64"));
+
           var proc = child_process.spawn('./better-bot-exe', [ JSON.stringify(event) ], { stdio: 'inherit' });
 
           proc.on('close', function(code) {
