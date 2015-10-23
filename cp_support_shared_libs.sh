@@ -9,7 +9,7 @@ for i in $files
 do
   dcc="${i%/*}" # get dirname only
   [ ! -d ${d}${dcc} ] && mkdir -p ${d}${dcc}
-  ${_cp} -f $i ${d}${dcc}
+  cp -f "$i" "${d}${dcc}"
 done
 
 # Works with 32 and 64 bit ld-linux
