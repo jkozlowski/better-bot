@@ -34,5 +34,6 @@ before_install:
 
 script:
   - docker run -v "$CHECKOUT_DIR:$MOUNT_DIR" "$DOCKER_IMAGE" /bin/sh -c "$STACK_CMDS"
+  - cp index.js dist
   - mkdir build
-  - zip "build/better-bot-exe.zip" index.js dist/better-bot-exe
+  - zip -j "build/better-bot-exe.zip" dist/*
