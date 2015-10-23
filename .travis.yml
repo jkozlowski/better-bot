@@ -9,7 +9,7 @@ env:
     - CHECKOUT_DIR="/home/travis/build/jkozlowski/better-bot"
     - MOUNT_DIR="/root/better-bot"
     - STACK_CMDS="cd /root/better-bot; stack build; stack test; stack install;
-                  mkdir dist; cp ~/.local/bin/better-bot-exe dist"
+                  mkdir dist; cp ~/.local/bin/better-bot-exe dist; ls -la /usr/lib; ls -la /usr/lib64"
 
 deploy:
   provider: s3
