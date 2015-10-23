@@ -14,9 +14,8 @@ env:
                   stack install;
                   mkdir dist;
                   cp ~/.local/bin/better-bot-exe dist;
-                  ls -la /usr/lib;
-                  ls -la /usr/lib64;
-                  ldd ~/.local/bin/better-bot-exe"
+                  sh cp_support_shared_libs dist ~/.local/bin/better-bot-exe;
+                  ls -la dist"
 
 deploy:
   provider: s3
