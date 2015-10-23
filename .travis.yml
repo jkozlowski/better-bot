@@ -20,6 +20,8 @@ deploy:
   acl: bucket_owner_full_control
   local_dir: build
   upload-dir: bin
+  on:
+    branch: master
 
 sudo: required
 
