@@ -1,7 +1,7 @@
 #!/bin/bash
-local d="$1"            # JAIL ROOT
-local pFILE="$2"        # copy bin file libs
-local files=""
+d="$1"            # JAIL ROOT
+pFILE="$2"        # copy bin file libs
+files=""
 ## use ldd to get shared libs list ###
 files="$(ldd $pFILE |  awk '{ print $3 }' | sed  '/^$/d')"
 
