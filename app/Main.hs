@@ -41,20 +41,21 @@ import           Types                       (BookingConfig, Config, DayOfWeek,
                                               bookingConfigConfig,
                                               bookingConfigSlots, configEmail,
                                               configPassword,
+                                              optionsConfigFile,
                                               dayOfWeekFromUTCTime,
                                               optsParserInfo, readConfig,
                                               _Password, _Slots)
 
 main :: IO ()
 main = execParser optsParserInfo >>= \opts -> do
-  maybeConfig <- readConfig
+  maybeConfig <- readConfig (opts ^. optionsConfigFile)
   case maybeConfig of
     Left e  -> exitWithError e
     Right c -> runStdoutLoggingT $ do
       $(logInfo) $ "Running with config: " <> (pack . Pretty.ppShow $ c)
       case opts of
-        Opts (Just date) -> withParticularDay c date
-        Opts Nothing     -> withCurrentTime c
+        Opts (Just date) _ -> withParticularDay c date
+        Opts Nothing     _ -> withCurrentTime c
 
 withCurrentTime :: (MonadCatch m, MonadLoggerIO m)
                 => [BookingConfig]

@@ -48,6 +48,7 @@ executable better-bot-exe
                      , better-bot
                      , containers
                      , text
+                     , bytestring
                      , lens
                      , wreq
                      , yaml
