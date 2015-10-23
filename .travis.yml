@@ -15,7 +15,8 @@ env:
                   mkdir dist;
                   cp ~/.local/bin/better-bot-exe dist;
                   ls -la /usr/lib;
-                  ls -la /usr/lib64"
+                  ls -la /usr/lib64;
+                  ldd ~/.local/bin/better-bot-exe"
 
 deploy:
   provider: s3
