@@ -1,5 +1,6 @@
 var child_process = require('child_process');
 var AWS = require('aws-sdk');
+var fs = require('fs');
 var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
@@ -10,6 +11,8 @@ exports.handler = function(event, context) {
             context.fail ("Error getting file: " + err)
         } else {
 
+          console.log(fs.readdirSync("/usr/lib"));
+          console.log(fs.readdirSync("/usr/lib64"));
 
           var proc = child_process.spawn('./better-bot-exe', [ JSON.stringify(event) ], { stdio: 'inherit' });
 
