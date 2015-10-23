@@ -18,6 +18,7 @@ module Types where
 import           Control.Lens.TH             (makeClassy, makePrisms)
 import           Data.Aeson
 import qualified Data.Aeson.TH               as A
+import qualified Data.ByteString             as B
 import qualified Data.Map.Strict             as M
 import           Data.Maybe                  (maybe)
 import           Data.Text                   (Text, pack)
@@ -30,10 +31,15 @@ import qualified Data.Yaml                   as Yaml
 import           Network.Better.Aeson        (decapitalizeJsonOptionsRemovePrefix)
 import           Options.Applicative
 import           Options.Applicative.Builder
+import           System.IO                   (stdin)
 
 data Opts = Opts
   { _optionsOverrideDate :: Maybe Time.Day
+  , _optionsConfigFile   :: Maybe FilePath
   } deriving (Show, Eq)
+
+$(makeClassy ''Opts)
+$(makePrisms ''Opts)
 
 optsParserInfo :: ParserInfo Opts
 optsParserInfo = info (helper <*> optsParser)
@@ -49,8 +55,13 @@ optsParser = Opts
      <> metavar "DATE"
      <> help ("Date in yyyy-mm-dd format. If specified, "                <>
               "this date will be used for the bookings and appropriate " <>
-              " slot will be looked up in the config (by figuring out " <>
+              " slot will be looked up in the config (by figuring out "  <>
               " what day of the week this particular date falls on)."))
+  <*> optional (strOption
+       (  long "config"
+       <> metavar "FILENAME"
+       <> help ("Optional path to the config file. If not specified " <>
+                "config will be read from stdin. ")))
 
   where dateReader :: ReadM Time.Day
         dateReader = do
@@ -130,5 +141,9 @@ $(makePrisms ''BookingConfig)
 $(A.deriveJSON (decapitalizeJsonOptionsRemovePrefix "_bookingConfig") ''BookingConfig)
 
 -- TODO: Check that there are no duplicate sections in the config
-readConfig :: IO (Either Yaml.ParseException [BookingConfig])
-readConfig = Yaml.decodeFileEither "config.yaml"
+readConfig :: Maybe FilePath -> IO (Either Yaml.ParseException [BookingConfig])
+readConfig maybeConfig =
+  let config = case maybeConfig of
+                  Just fileName -> B.readFile fileName
+                  Nothing       -> B.hGetContents stdin
+  in Yaml.decodeEither' <$> config 

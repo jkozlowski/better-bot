@@ -1,5 +1,6 @@
 var child_process = require('child_process');
 var AWS = require('aws-sdk');
+var fs = require('fs');
 var s3 = new AWS.S3();
 
 exports.handler = function(event, context) {
@@ -10,7 +11,7 @@ exports.handler = function(event, context) {
             context.fail ("Error getting file: " + err)
         } else {
 
-          var proc = child_process.spawn('./better-bot', [ JSON.stringify(event) ], { stdio: 'inherit' });
+          var proc = child_process.spawn('./better-bot-exe', [ JSON.stringify(event) ], { stdio: 'inherit' });
 
           proc.on('close', function(code) {
             if(code !== 0) {
@@ -19,9 +20,6 @@ exports.handler = function(event, context) {
 
             context.done(null);
           });
-
-          // console.log('Data :', );
-          // context.succeed();
         }
     });
 

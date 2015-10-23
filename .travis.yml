@@ -8,8 +8,15 @@ env:
     - DOCKER_IMAGE="jkozlowski/amazon-eu-ireland:ami-a10897d6"
     - CHECKOUT_DIR="/home/travis/build/jkozlowski/better-bot"
     - MOUNT_DIR="/root/better-bot"
-    - STACK_CMDS="cd /root/better-bot; stack build; stack test; stack install;
-                  mkdir dist; cp ~/.local/bin/better-bot-exe dist"
+    - STACK_CMDS="cd /root/better-bot;
+                  stack build;
+                  stack test;
+                  stack install;
+                  mkdir dist;
+                  mkdir dist/lib;
+                  cp ~/.local/bin/better-bot-exe dist;
+                  sh cp_support_shared_libs.sh ~/.local/bin/better-bot-exe dist/lib;
+                  find dist"
 
 deploy:
   provider: s3
@@ -20,6 +27,8 @@ deploy:
   acl: bucket_owner_full_control
   local_dir: build
   upload-dir: bin
+  on:
+    branch: master
 
 sudo: required
 
@@ -29,8 +38,10 @@ services:
 before_install:
   - docker login -e="$DOCKER_EMAIL" -u="$DOCKER_USERNAME" -p="$DOCKER_PASSWORD"
   - docker pull "$DOCKER_IMAGE"
+  - mkdir dist
 
 script:
   - docker run -v "$CHECKOUT_DIR:$MOUNT_DIR" "$DOCKER_IMAGE" /bin/sh -c "$STACK_CMDS"
+  - cp index.js dist
   - mkdir build
-  - zip "build/better-bot-exe.zip" main.js dist/better-bot-exe
+  - zip -j "build/better-bot-exe.zip" dist/*
