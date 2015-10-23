@@ -25,7 +25,6 @@ library
                      , scalpel
                      , lens
                      , aeson
-                     , classy-prelude
                      , text
                      , regex-tdfa
                      , parsec
@@ -72,7 +71,6 @@ test-suite better-bot-test
                      , lens
                      , text
                      , tasty
-                     , tasty-hspec
                      , HUnit
                      , tasty-hunit
                      , tasty-quickcheck

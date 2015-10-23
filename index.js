@@ -10,7 +10,7 @@ exports.handler = function(event, context) {
             context.fail ("Error getting file: " + err)
         } else {
 
-          var proc = child_process.spawn('./better-bot', [ JSON.stringify(event) ], { stdio: 'inherit' });
+          var proc = child_process.spawn('./dist/better-bot', [ JSON.stringify(event) ], { stdio: 'inherit' });
 
           proc.on('close', function(code) {
             if(code !== 0) {
