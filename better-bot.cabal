@@ -12,8 +12,6 @@ category:            Network
 build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  main.js
-extra-libraries:     /usr/lib64
-extra-lib-dirs:      /usr/lib64
 
 library
   hs-source-dirs:      src

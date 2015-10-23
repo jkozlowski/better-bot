@@ -8,7 +8,7 @@ env:
     - DOCKER_IMAGE="jkozlowski/amazon-eu-ireland:ami-a10897d6"
     - CHECKOUT_DIR="/home/travis/build/jkozlowski/better-bot"
     - MOUNT_DIR="/root/better-bot"
-    - STACK_CMDS="cd /root/better-bot; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64 ;stack build; stack test; stack install;
+    - STACK_CMDS="cd /root/better-bot; export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib64 ; locate librt; stack build; stack test; stack install;
                   mkdir dist; cp ~/.local/bin/better-bot-exe dist"
 
 deploy:
