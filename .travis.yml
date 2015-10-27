@@ -8,15 +8,7 @@ env:
     - DOCKER_IMAGE="jkozlowski/amazon-eu-ireland:ami-a10897d6"
     - CHECKOUT_DIR="/home/travis/build/jkozlowski/better-bot"
     - MOUNT_DIR="/root/better-bot"
-    - STACK_CMDS="cd /root/better-bot;
-                  stack build;
-                  stack test;
-                  stack install;
-                  mkdir dist;
-                  mkdir dist/lib;
-                  cp ~/.local/bin/better-bot-exe dist;
-                  sh cp_support_shared_libs.sh ~/.local/bin/better-bot-exe dist;
-                  find dist"
+    - STACK_CMDS="sh /root/better-bot/build_in_docker.sh"
 
 deploy:
   provider: s3

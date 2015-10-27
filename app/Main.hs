@@ -19,9 +19,12 @@ import           BookSlot
 import           Control.Exception           (SomeException)
 import           Control.Lens
 import           Control.Monad
-import           Control.Monad.Catch         (MonadCatch, MonadThrow, catch)
+import           Control.Monad.Catch         (MonadCatch, MonadMask, MonadThrow,
+                                              onException)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Logger
+import           Control.Retry               (constantDelay,
+                                              limitRetries, recoverAll)
 import qualified Data.ByteString.Char8       as S8
 import           Data.Char                   (toLower)
 import           Data.List                   (concatMap)
@@ -55,6 +58,7 @@ import           Types                       (BookingConfig, Config, DayOfWeek,
                                               optionsConfigFile, optsParserInfo,
                                               readConfig, _Password, _Slots)
 
+
 main :: IO ()
 main = execParser optsParserInfo >>= \opts -> do
   maybeConfig <- readConfig (opts ^. optionsConfigFile)
@@ -66,7 +70,7 @@ main = execParser optsParserInfo >>= \opts -> do
         Opts (Just date) _ -> withParticularDay c date
         Opts Nothing     _ -> withCurrentTime c
 
-withCurrentTime :: (MonadCatch m, MonadLoggerIO m)
+withCurrentTime :: (MonadCatch m, MonadMask m, MonadLoggerIO m)
                 => [BookingConfig]
                 -> m ()
 withCurrentTime c = do
@@ -89,7 +93,8 @@ withCurrentTime c = do
 
   withParticularDay c sameDayNextWeek
 
-withParticularDay :: (MonadCatch m, MonadLoggerIO m) => [BookingConfig] -> Time.Day -> m ()
+withParticularDay :: (MonadCatch m, MonadMask m, MonadLoggerIO m)
+                  => [BookingConfig] -> Time.Day -> m ()
 withParticularDay c currentDay = do
 
   let dayOfWeek                = dayOfWeekFromUTCTime currentDay
@@ -101,18 +106,25 @@ withParticularDay c currentDay = do
 
   $(logInfo) $ "Found slots " <> (pack . Pretty.ppShow $ slots)
 
-  forM_ slots $ \(c, slot) -> do
+  retry $ forM_ slots $ \(c, slot) -> do
     let email = c ^. configEmail
     let pass  = c ^. configPassword . _Password
     s <- createSession email pass
-    catch (bookActivity s c currentDay slot)
-          (\(e::SomeException) -> $(logError) $ "Could not book: " <> pack (show e))
+    onException (bookActivity s c currentDay slot)
+                ($(logError) $ "Could not book")
 
 findSlots :: DayOfWeek -> [BookingConfig] -> [(Config, Text)]
 findSlots day = concatMap go
   where go bc = case Map.lookup day (bc ^. bookingConfigSlots . _Slots) of
                   Just slot -> [(bc ^. bookingConfigConfig, slot)]
                   Nothing   -> []
+
+-- retries
+retry :: (MonadIO m, MonadMask m) => m a -> m a
+retry = recoverAll (limitRetries maxRetries <> constantDelay delayMicros)
+  where delayMicros     = 2 * microsInSeconds
+        maxRetries      = 15
+        microsInSeconds = 1000000
 
 -- Logging setup
 
