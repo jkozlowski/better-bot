@@ -16,15 +16,15 @@
 module Main where
 
 import           BookSlot
-import           Control.Exception           (SomeException)
+import           Control.Exception           (SomeException(..))
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Catch         (MonadCatch, MonadMask, MonadThrow,
-                                              onException)
+                                              onException, catch, throwM)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Logger
-import           Control.Retry               (constantDelay,
-                                              limitRetries, recoverAll)
+import           Control.Retry               (constantDelay, limitRetries,
+                                              recoverAll)
 import qualified Data.ByteString.Char8       as S8
 import           Data.Char                   (toLower)
 import           Data.List                   (concatMap)
@@ -40,6 +40,7 @@ import qualified Data.Time.Calendar          as Time
 import qualified Data.Time.Calendar.WeekDate as Time
 import qualified Data.Time.Clock             as Time
 import qualified Data.Time.Format            as Time
+import           GHC.Stack                   (whoCreated)
 import           Language.Haskell.TH.Syntax
 import           Network.Better.Session
 import           Network.Better.Types
@@ -110,8 +111,11 @@ withParticularDay c currentDay = do
     let email = c ^. configEmail
     let pass  = c ^. configPassword . _Password
     s <- createSession email pass
-    onException (bookActivity s c currentDay slot)
-                ($(logError) $ "Could not book")
+    bookActivity s c currentDay slot
+      `catch` \e@SomeException {} ->
+          do stack <- unlines <$> liftIO (whoCreated e)
+             $(logError) $ "Could not book: \n" <> T.pack stack
+             throwM e
 
 findSlots :: DayOfWeek -> [BookingConfig] -> [(Config, Text)]
 findSlots day = concatMap go
