@@ -169,7 +169,7 @@ getTimetableEntry s
                   date' startTime' = do
   timetableEntries <- getTimetable s facility' activityType' activity'
   -- e.g. Mon, 19 Oct
-  let dateFormat = "%a, %e %b"
+  let dateFormat = "%a, %d %b"
       formattedDate = T.pack $ Time.formatTime Time.defaultTimeLocale dateFormat date'
   return $! find (\e -> e ^. timetableEntryDate      == formattedDate &&
                         e ^. timetableEntryStartTime == startTime')
