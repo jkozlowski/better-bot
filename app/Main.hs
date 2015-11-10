@@ -114,7 +114,7 @@ withParticularDay c currentDay = do
     bookActivity s c currentDay slot
       `catch` \e@SomeException {} ->
           do stack <- unlines <$> liftIO (whoCreated e)
-             $(logError) $ "Could not book: \n" <> T.pack stack
+             $(logError) $ "Could not book: " <> T.pack (show e) <> "\n" <> T.pack stack
              throwM e
 
 findSlots :: DayOfWeek -> [BookingConfig] -> [(Config, Text)]
