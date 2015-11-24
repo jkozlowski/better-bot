@@ -27,8 +27,10 @@ module Network.Better.Types (
  , BasketCount, _BasketCount, emptyBasketCount
  , basketBasketCount
 
- , ActivityTypeId(..), ActivityType, _ActivityType, emptyActivityType
+ , ActivityTypeId(..), ActivityTypeBookingId(..), ActivityType
+ , _ActivityType, emptyActivityType
  , activityTypeName, activityTypeId, activityTypeFacilityId
+ , activityTypeBookingType, activityTypeBookingTypeName 
 
  , ActivityId(..), Activity, _Activity, emptyActivity
  , activityName, activityId, activityActivityTypeId
@@ -159,11 +161,17 @@ emptyBasketCount = BasketCount
 newtype ActivityTypeId = ActivityTypeId Int
   deriving (Show, Eq, FromJSON, ToJSON)
 
+-- | Id of ActivityTypeBookingId.
+newtype ActivityTypeBookingId = ActivityTypeBookingId Int
+  deriving (Show, Eq, FromJSON, ToJSON)
+
 -- | Type of activity in a facility.
 data ActivityType = ActivityType
-  { _activityTypeName       :: {-# UNPACK #-} !Text
-  , _activityTypeId         :: {-# UNPACK #-} !ActivityTypeId
-  , _activityTypeFacilityId :: {-# UNPACK #-} !FacilityId
+  { _activityTypeName            :: {-# UNPACK #-} !Text
+  , _activityTypeId              :: {-# UNPACK #-} !ActivityTypeId
+  , _activityTypeFacilityId      :: {-# UNPACK #-} !FacilityId
+  , _activityTypeBookingType     :: {-# UNPACK #-} !ActivityTypeBookingId
+  , _activityTypeBookingTypeName :: {-# UNPACK #-} !Text
   } deriving (Show, Eq)
 
 $(makeClassy ''ActivityType)
@@ -171,9 +179,11 @@ $(deriveJSON (jsonOptionsRemovePrefix "_activityType") ''ActivityType)
 $(makePrisms ''ActivityType)
 
 emptyActivityType = ActivityType
-  { _activityTypeName       = ""
-  , _activityTypeId         = ActivityTypeId 0
-  , _activityTypeFacilityId = FacilityId 0
+  { _activityTypeName            = ""
+  , _activityTypeId              = ActivityTypeId 0
+  , _activityTypeFacilityId      = FacilityId 0
+  , _activityTypeBookingType     = ActivityTypeBookingId 0
+  , _activityTypeBookingTypeName = ""
   }
 
 -- | Id of specific Activity.

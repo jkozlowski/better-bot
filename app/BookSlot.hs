@@ -131,6 +131,7 @@ getActivityOrExit :: MonadIOLog m
 getActivityOrExit s facility activityType toFind =
   getActivityByName s (facility ^. facilityId)
                       (activityType ^. activityTypeId)
+                      (activityType ^. activityTypeBookingType)
                       toFind >>=
     \case
       Nothing       -> exitWithError $ "Failed to find activity: " <> toFind
@@ -157,7 +158,7 @@ getTimetableEntryOrExit s
                         date'
                         startTime' =
   getTimetableEntry s (facility'     ^. facilityId    )
-                      (activityType' ^. activityTypeId)
+                      (activityType' ^. activityTypeBookingType)
                       (activity'     ^. activityId    )
                       date'
                       startTime' >>=

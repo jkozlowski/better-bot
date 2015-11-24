@@ -35,6 +35,7 @@ import qualified Data.Time.Format           as Time
 import           Data.Typeable
 import           Network.Better.Types       (Activity (..), ActivityId (..),
                                              ActivityType (..),
+                                             ActivityTypeBookingId (..),
                                              ActivityTypeId (..),
                                              BasketCount (..), BasketItem (..),
                                              Booking (..),
@@ -126,40 +127,49 @@ getActivityTypeByName s facility activity = do
   activityTypes <- getActivityTypes s facility
   return $! find (\a -> a ^. activityTypeName == activity) activityTypes
 
-getActivities :: MonadIO m => S.Session -> FacilityId -> ActivityTypeId -> m [Activity]
-getActivities s (FacilityId facilityId) (ActivityTypeId activityTypeId)
+getActivities :: MonadIO m
+              => S.Session
+              -> FacilityId
+              -> ActivityTypeId
+              -> ActivityTypeBookingId
+              -> m [Activity]
+getActivities s (FacilityId facilityId)
+                (ActivityTypeId activityTypeId)
+                (ActivityTypeBookingId activityTypeBookingId)
   = getAsJSONWith opts s "getactivities"
     where opts = defaults & param "facilityId"     .~ paramVal facilityId
                           & param "activityTypeId" .~ paramVal activityTypeId
+                          & param "bookingType"    .~ paramVal activityTypeBookingId
 
 getActivityByName :: MonadIO m
                   => S.Session
                   -> FacilityId
                   -> ActivityTypeId
+                  -> ActivityTypeBookingId
                   -> T.Text
                   -> m (Maybe Activity)
-getActivityByName s facility activity activityName' = do
-  activities <- getActivities s facility activity
+getActivityByName s facility activity activityBookingId activityName' = do
+  activities <- getActivities s facility activity activityBookingId
   return $! find (\a -> a ^. activityName == activityName') activities
 
 getTimetable :: MonadIO m
              => S.Session
              -> FacilityId
-             -> ActivityTypeId
+             -> ActivityTypeBookingId
              -> ActivityId
              -> m [TimetableEntry]
 getTimetable s (FacilityId     facilityId)
-               (ActivityTypeId activityTypeId)
+               (ActivityTypeBookingId activityTypeBookingId)
                (ActivityId     activityId)
  = getAsJSONWith opts s "gettimetable"
  where opts = defaults & param "facilityId"     .~ paramVal facilityId
-                       & param "activityTypeId" .~ paramVal activityTypeId
+                       & param "bookingType"    .~ paramVal activityTypeBookingId
                        & param "activityId"     .~ paramVal activityId
 
 getTimetableEntry :: MonadIO m
                   => S.Session
                   -> FacilityId
-                  -> ActivityTypeId
+                  -> ActivityTypeBookingId
                   -> ActivityId
                   -> Time.Day
                   -> T.Text
