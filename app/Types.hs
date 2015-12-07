@@ -36,6 +36,7 @@ import           System.IO                   (stdin)
 data Opts = Opts
   { _optionsOverrideDate :: Maybe Time.Day
   , _optionsConfigFile   :: Maybe FilePath
+  , _optionsTimeout      :: Time.TimeOfDay
   } deriving (Show, Eq)
 
 $(makeClassy ''Opts)
@@ -62,14 +63,22 @@ optsParser = Opts
        <> metavar "FILENAME"
        <> help ("Optional path to the config file. If not specified " <>
                 "config will be read from stdin. ")))
+  <*> option timeoutReader
+      ( long "timeout"
+     <> value (Time.TimeOfDay 22 2 0)
+     <> metavar "TIMEOUT"
+     <> showDefault
+     <> help "Time in hh:mm format that specifies the timeout.")
 
   where dateReader :: ReadM Time.Day
-        dateReader = do
-          dateValue <- str
-          -- yyyy-mm-dd
-          let dateFormat = "%F"
-          let formatted = Time.parseTimeM True Time.defaultTimeLocale dateFormat dateValue
-          maybe (readerError $ "Could not parse date: " <> dateValue)
+        dateReader = parseWithDefaultLocale "%F" "date"
+        timeoutReader :: ReadM Time.TimeOfDay
+        timeoutReader = parseWithDefaultLocale "%R" "timeout"
+        parseWithDefaultLocale :: Time.ParseTime a => String -> String -> ReadM a
+        parseWithDefaultLocale format valueType = do
+          value <- str
+          let formatted = Time.parseTimeM True Time.defaultTimeLocale format value
+          maybe (readerError $ "Could not parse " <> valueType <> ": " <> value)
                 pure
                 formatted
 
@@ -146,4 +155,4 @@ readConfig maybeConfig =
   let config = case maybeConfig of
                   Just fileName -> B.readFile fileName
                   Nothing       -> B.hGetContents stdin
-  in Yaml.decodeEither' <$> config 
+  in Yaml.decodeEither' <$> config

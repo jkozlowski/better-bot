@@ -16,14 +16,15 @@
 module Main where
 
 import           BookSlot
-import           Control.Exception           (SomeException(..))
+import           Control.Exception           (SomeException (..))
 import           Control.Lens
 import           Control.Monad
 import           Control.Monad.Catch         (MonadCatch, MonadMask, MonadThrow,
-                                              onException, catch, throwM)
+                                              catch, onException, throwM)
 import           Control.Monad.IO.Class      (MonadIO, liftIO)
 import           Control.Monad.Logger
-import           Control.Retry               (constantDelay, limitRetries,
+import           Control.Retry               (RetryPolicyM (..), constantDelay,
+                                              getRetryPolicyM, limitRetries,
                                               recoverAll)
 import qualified Data.ByteString.Char8       as S8
 import           Data.Char                   (toLower)
@@ -40,6 +41,7 @@ import qualified Data.Time.Calendar          as Time
 import qualified Data.Time.Calendar.WeekDate as Time
 import qualified Data.Time.Clock             as Time
 import qualified Data.Time.Format            as Time
+import qualified Data.Time.LocalTime         as Time
 import           GHC.Stack                   (whoCreated)
 import           Language.Haskell.TH.Syntax
 import           Network.Better.Session
@@ -66,10 +68,11 @@ main = execParser optsParserInfo >>= \opts -> do
   case maybeConfig of
     Left e  -> exitWithError e
     Right c -> runAppLogging $ do
+      $(logInfo) $ "Running with opts: " <> (pack . show $ opts)
       $(logInfo) $ "Running with config: " <> (pack . Pretty.ppShow $ c)
       case opts of
-        Opts (Just date) _ -> withParticularDay c date
-        Opts Nothing     _ -> withCurrentTime c
+        Opts (Just date) _ _ -> withParticularDay c date
+        Opts Nothing     _ _ -> withCurrentTime c
 
 withCurrentTime :: (MonadCatch m, MonadMask m, MonadLoggerIO m)
                 => [BookingConfig]
@@ -125,10 +128,19 @@ findSlots day = concatMap go
 
 -- retries
 retry :: (MonadIO m, MonadMask m) => m a -> m a
-retry = recoverAll (limitRetries maxRetries <> constantDelay delayMicros)
+retry m = recoverAll (retryUpToTime (Time.TimeOfDay 22 2 0) $ constantDelay delayMicros) (const m)
   where delayMicros     = 2 * microsInSeconds
-        maxRetries      = 15
         microsInSeconds = 1000000
+
+-- TODO: Take the timeout time as param
+retryUpToTime :: MonadIO m => Time.TimeOfDay -> RetryPolicyM m -> RetryPolicyM m
+retryUpToTime timeout (RetryPolicyM p) = RetryPolicyM $ \rs -> do
+  currentDateTime <- liftIO Time.getCurrentTime
+  let time = Time.utctDayTime currentDateTime
+      shouldTimeout = Time.timeToTimeOfDay time > timeout
+  if shouldTimeout
+   then return Nothing
+   else p rs
 
 -- Logging setup
 
